@@ -55,6 +55,8 @@ package() {
   ln -s libbz2.so.1.0.6 $pkgdir/usr/lib/libbz2.so.1
   ln -s libbz2.so.1.0.6 $pkgdir/usr/lib/libbz2.so.1.0
 
+  install -m755 libbz2.a $pkgdir/usr/lib
+
   install -m644 bzlib.h $pkgdir/usr/include/
 
   install -m644 bzip2.1 $pkgdir/usr/share/man/man1/
