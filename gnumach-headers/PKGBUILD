@@ -2,9 +2,9 @@
 
 _name=gnumach
 pkgname=gnumach-headers
-pkgver=1.8.r63.gb036b05d
+pkgver=1.8.r82.g0294ec07
 # branch 'master' in hurd/gnumach.git
-_commit=b036b05d9ad0ba367b6c99a046364ec912416f85
+_commit=0294ec07a1655b2883afae5877eb9111a7f3a343
 pkgrel=1
 pkgdesc="GNU Mach - header files"
 arch=(i686)
