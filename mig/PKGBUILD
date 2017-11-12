@@ -1,0 +1,36 @@
+# Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
+
+pkgname=mig
+pkgver=1.8
+pkgrel=1
+pkgdesc="Mach Interface Generator"
+arch=('i686')
+license=('GPL')
+url="http://www.gnu.org/software/hurd/microkernel/mach/mig.html"
+groups=('base-devel')
+depends=('gnumach-headers' 'glibc')
+source=(http://git.savannah.gnu.org/cgit/hurd/mig.git/snapshot/mig-$pkgver.tar.gz)
+sha512sums=('698fb9c153b5ab48ff9975c2d7c7d68541bbf16ae0d6f7a402e85a374e435d3657dc883fd82edef7d5f5dc9cb9a1e830340f3f7d8134e6f125730e9782b42711')
+
+prepare() {
+  rm -rf build
+  mkdir build
+
+  cd $pkgname-$pkgver
+  autoreconf -fi
+}
+
+build() {
+  cd build
+
+  ../$pkgname-$pkgver/configure \
+    --prefix=/usr \
+    --libexecdir=/usr/lib
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR=$pkgdir install
+}

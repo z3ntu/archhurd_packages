@@ -1,0 +1,36 @@
+# Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
+
+_name=gnumach
+pkgname=gnumach-headers
+pkgver=1.8
+pkgrel=1
+pkgdesc="GNU Mach"
+arch=('i686')
+license=('GPL')
+url="https://www.gnu.org/software/hurd/microkernel/mach.html"
+groups=('base-devel')
+depends=("glibc")
+makedepends=("git")
+source=(http://git.savannah.gnu.org/cgit/hurd/gnumach.git/snapshot/gnumach-$pkgver.tar.gz)
+sha512sums=('d10c8235d268a6844ad5c60a05b8d6b590a81131521bf62db9834659cb5b9d05b3ff8ca6bc17555bb6ef58ca21e296ebf78aa0541614b6b793e8eb6c1554b808')
+
+prepare() {
+  rm -rf build
+  mkdir build
+
+  cd $_name-$pkgver
+  autoreconf -fi
+}
+
+build() {
+  cd build
+
+  ../$_name-$pkgver/configure \
+    --prefix=/usr \
+    --libexecdir=/usr/lib
+}
+
+package() {
+  cd build
+  make DESTDIR=$pkgdir install-data
+}

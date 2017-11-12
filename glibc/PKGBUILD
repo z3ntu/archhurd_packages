@@ -14,7 +14,7 @@ url="http://www.gnu.org/software/libc"
 license=('GPL' 'LGPL')
 groups=('base')
 depends=('tzdata' 'filesystem')
-makedepends=('gcc>=6' 'git')
+makedepends=('gcc>=6' 'git' 'mig')
 backup=(etc/gai.conf
         etc/locale.gen
         etc/nscd.conf)
@@ -26,8 +26,10 @@ md5sums=('SKIP'
          'SKIP')
 
 prepare() {
-  mkdir glibc-build
-  cp -r "$srcdir"/libpthread "$srcdir"/glibc/
+  mkdir -p glibc-build
+  if [ ! -d "$srcdir"/libpthread ]; then
+    cp -r "$srcdir"/libpthread "$srcdir"/glibc/
+  fi
 }  
 
 build() {
