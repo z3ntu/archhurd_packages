@@ -1,0 +1,74 @@
+# Maintainer: Matthias Lanzinger <mlaenz@gmail.com>
+
+pkgname=pacman
+pkgver=5.0.2
+pkgrel=1
+pkgdesc="A library-based package manager with dependency support"
+arch=(i686)
+url="http://www.archlinux.org/pacman/"
+license=('GPL')
+groups=('base')
+depends=('bash' 'libarchive>=2.8.4-2' 'libfetch>=2.28' 'pacman-mirrorlist')
+optdepends=('fakeroot: for makepkg usage as normal user'
+	    'curl: for rankmirrors usage')
+backup=(etc/pacman.conf etc/makepkg.conf)
+source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz
+        pacman.conf
+        makepkg.conf
+        pacman_hurd.patch
+        pacman_hurd_fakeroot.patch
+	pacman_pipe_buf.patch
+	pkginfo.patch)
+md5sums=('f36f5e7e95a89436febe1bcca874fc33'
+         '832776805356ef7a6dcfb2de44ddd9c9'
+         'f5b59fe5f016eebd9590318530bbd996'
+         '210e7165adf4fa8822c4eb935bc92935'
+         'f738ad83c48dc4104673f7b82e225a23'
+         '3f97e8f0f0ba28020cc6191628fe68c4'
+         'ec3531b449794cd5811fdc1818900f2c')
+options=('!zipman')
+
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+
+  patch -Np2 < $srcdir/pacman_hurd.patch
+  patch -Np2 < $srcdir/pacman_pipe_buf.patch
+  patch -Np1 < $srcdir/pacman_hurd_fakeroot.patch
+  patch -Np1 < $srcdir/pkginfo.patch
+
+  #as-needed causes a segfault
+  export LDFLAGS=""
+  ./configure --prefix=/ --sysconfdir=/etc \
+    --localstatedir=/var --enable-doc \
+    --with-scriplet-shell=/bin/bash # \
+#    --with-ldconfig=/bin/ldconfig
+  make V=1
+  make -C contrib
+}
+
+package() {
+  cd $srcdir/$pkgname-$pkgver
+ 
+  make DESTDIR="$pkgdir" install
+  make DESTDIR="$pkgdir" -C contrib install
+
+  install -m644 ${srcdir}/pacman.conf ${pkgdir}/etc/pacman.conf
+
+  sed -i ${pkgdir}/etc/makepkg.conf \
+    -e "s|@CARCH[@]|i686|g" \
+    -e "s|@CHOST[@]|i686-pc-gnu|g" \
+    -e "s|@CARCHFLAGS[@]|-march=i686|g"
+
+
+  # put bash_completion in the right location
+  install -dm755 "$pkgdir/share/bash-completion/completions"
+  mv "$pkgdir/etc/bash_completion.d/pacman" "$pkgdir/share/bash-completion/completions"
+  rmdir "$pkgdir/etc/bash_completion.d"
+
+  for f in makepkg pacman-key; do
+    ln -s pacman "$pkgdir/share/bash-completion/completions/$f"
+  done
+
+  install -Dm644 contrib/PKGBUILD.vim "$pkgdir/share/vim/vimfiles/syntax/PKGBUILD.vim"
+}
+

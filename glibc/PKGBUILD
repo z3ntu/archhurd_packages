@@ -1,0 +1,57 @@
+# $Id$
+# Maintainer: Allan McRae <allan@archlinux.org>
+
+# toolchain build order: linux-api-headers->glibc->binutils->gcc->binutils->glibc
+# NOTE: valgrind requires rebuilt with each major glibc version
+
+pkgname=glibc
+pkgver=2.24
+pkgrel=1
+#_commit=ccb4fd7a657b0fbc4890c98f4586d58a135fc583
+pkgdesc="GNU C Library"
+arch=('i686' 'x86_64')
+url="http://www.gnu.org/software/libc"
+license=('GPL' 'LGPL')
+groups=('base')
+depends=('tzdata' 'filesystem')
+makedepends=('gcc>=6' 'git')
+backup=(etc/gai.conf
+        etc/locale.gen
+        etc/nscd.conf)
+	options=('!strip')  #'staticlibs')
+install=glibc.install
+source=(git+https://git.savannah.gnu.org/git/hurd/glibc.git#branch=tschwinge/Roger_Whittaker
+        git+https://git.savannah.gnu.org/git/hurd/libpthread.git)
+md5sums=('SKIP'
+         'SKIP')
+
+prepare() {
+  mkdir glibc-build
+  cp -r "$srcdir"/libpthread "$srcdir"/glibc/
+}  
+
+build() {
+  cd glibc-build
+  ../glibc/configure \
+    --prefix=/ \
+    --enable-obsolete-rpc \
+    --disable-profile \
+    --enable-add-ons=libpthread \
+    --enable-obsolete-rpc \
+    --disable-werror \
+    --disable-nscd
+  make
+}
+
+check() {
+  cd glibc-build
+
+  # some failures are "expected"
+  make check || true
+}
+
+package() {
+  cd glibc-build
+
+  make install_root=${pkgdir} install
+}

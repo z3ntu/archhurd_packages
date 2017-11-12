@@ -1,0 +1,12 @@
+diff -ur source/pacman-3.3.3/configure.ac build/pacman-3.3.3/configure.ac
+--- source/pacman-3.3.3/lib/libalpm/alpm.h	2009-09-30 03:38:36.000000000 +0200
++++ build/pacman-3.3.3/lib/libalpm/alpm.h	2010-03-07 15:18:11.869981050 +0100
+@@ -35,6 +35,8 @@
+ 
+ #define DEPRECATED __attribute__((deprecated))
+ 
++#define PATH_MAX	4096
++
+ /*
+  * Arch Linux Package Management library
+  */

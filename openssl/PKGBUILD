@@ -1,0 +1,52 @@
+# Maintainer: Matthias Lanzinger <mlaenz@gmail.com>
+# Thanks to Pierre Schmitz, this is mostly his archlinux PKGBUILD
+
+pkgname=openssl
+_ver=1.1.0f
+# use a pacman compatible version scheme
+pkgver=${_ver/[a-z]/.${_ver//[0-9.]/}}
+#pkgver=$_ver
+pkgrel=1
+pkgdesc='The Open Source toolkit for Secure Sockets Layer and Transport Layer Security'
+arch=(i686)
+url='https://www.openssl.org'
+license=('custom:BSD')
+depends=('perl')
+optdepends=('ca-certificates')
+options=('!makeflags' !zipman)
+backup=('etc/ssl/openssl.cnf')
+source=("https://openssl.org/source/${pkgname}-${_ver}.tar.gz")
+md5sums=('7b521dea79ab159e8ec879d2333369fa')
+
+prepare() {
+	cd $srcdir/$pkgname-$_ver
+  sed -i 's|/usr/bin/env|/bin/env|' ./Configure
+	# fix target settings for hurd (don't know if it's needed anymore)
+	# patch -p1 -i $srcdir/hurd-target.patch
+
+	# set ca dir to /etc/ssl by default
+#	patch -p0 -i $srcdir/ca-dir.patch
+}
+
+build() {
+	cd $srcdir/$pkgname-$_ver
+
+	openssltarget='hurd-x86'
+	optflags=''
+
+	# mark stack as non-executable: http://bugs.archlinux.org/task/12434
+	./Configure --prefix=/usr --openssldir=/etc/ssl --libdir=lib \
+		shared no-ssl3-method ${optflags} \
+		"${openssltarget}" \
+		"-Wa,--noexecstack ${CPPFLAGS} ${CFLAGS} ${LDFLAGS}"
+
+	make depend
+	make
+}
+
+package() {
+	cd $srcdir/$pkgname-$_ver
+	make DESTDIR=$pkgdir MANDIR=/share/man MANSUFFIX=ssl install_sw install_ssldirs install_man_docs 
+	install -D -m644 LICENSE $pkgdir/share/licenses/$pkgname/LICENSE
+}
+

@@ -1,0 +1,12 @@
+--- src2/pacman-5.0.1/lib/libalpm/util.c	2016-12-15 15:15:49.000000000 +0000
++++ src/pacman-5.0.1/lib/libalpm/util.c	2016-12-15 15:16:11.000000000 +0000
+@@ -634,6 +634,9 @@
+ 	} else {
+ 		/* this code runs for the parent only (wait on the child) */
+ 		int status;
++#if (!defined(PIPE_BUF) && defined(_POSIX_PIPE_BUF))
++#define PIPE_BUF 8*_POSIX_PIPE_BUF
++#endif
+ 		char obuf[PIPE_BUF]; /* writes <= PIPE_BUF are guaranteed atomic */
+ 		char ibuf[LINE_MAX];
+ 		ssize_t olen = 0, ilen = 0;

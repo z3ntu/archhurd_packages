@@ -1,0 +1,13 @@
+diff --git a/scripts/makepkg.sh.in b/scripts/makepkg.sh.in
+index 450473b3..3922be84 100644
+--- a/scripts/makepkg.sh.in
++++ b/scripts/makepkg.sh.in
+@@ -1993,7 +1993,7 @@ catastrophic damage to your system.")" "makepkg"
+ 		exit 1 # $E_USER_ABORT
+ 	fi
+ else
+-	if [[ -z $FAKEROOTKEY ]]; then
++	if [[ -z $FAKED_MODE ]]; then
+ 		error "$(gettext "Do not use the %s option. This option is only for use by %s.")" "'-F'" "makepkg"
+ 		exit 1 # TODO: error code
+ 	fi

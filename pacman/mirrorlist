@@ -1,0 +1,3 @@
+
+#Arch Hurd Main Server
+Server = http://files.archhurd.org/repo/$repo
