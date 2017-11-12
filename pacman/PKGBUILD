@@ -17,8 +17,8 @@ source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz
         makepkg.conf
         pacman_hurd.patch
         pacman_hurd_fakeroot.patch
-	pacman_pipe_buf.patch
-	pkginfo.patch)
+        pacman_pipe_buf.patch
+        pkginfo.patch)
 md5sums=('f36f5e7e95a89436febe1bcca874fc33'
          '832776805356ef7a6dcfb2de44ddd9c9'
          'f5b59fe5f016eebd9590318530bbd996'
@@ -38,9 +38,9 @@ build() {
 
   #as-needed causes a segfault
   export LDFLAGS=""
-  ./configure --prefix=/ --sysconfdir=/etc \
+  ./configure --prefix=/usr--sysconfdir=/etc \
     --localstatedir=/var --enable-doc \
-    --with-scriplet-shell=/bin/bash # \
+    --with-scriplet-shell=/usr/bin/bash # \
 #    --with-ldconfig=/bin/ldconfig
   make V=1
   make -C contrib
@@ -61,14 +61,14 @@ package() {
 
 
   # put bash_completion in the right location
-  install -dm755 "$pkgdir/share/bash-completion/completions"
-  mv "$pkgdir/etc/bash_completion.d/pacman" "$pkgdir/share/bash-completion/completions"
+  install -dm755 "$pkgdir/usr/share/bash-completion/completions"
+  mv "$pkgdir/etc/bash_completion.d/pacman" "$pkgdir/usr/share/bash-completion/completions"
   rmdir "$pkgdir/etc/bash_completion.d"
 
   for f in makepkg pacman-key; do
-    ln -s pacman "$pkgdir/share/bash-completion/completions/$f"
+    ln -s pacman "$pkgdir/usr/share/bash-completion/completions/$f"
   done
 
-  install -Dm644 contrib/PKGBUILD.vim "$pkgdir/share/vim/vimfiles/syntax/PKGBUILD.vim"
+  install -Dm644 contrib/PKGBUILD.vim "$pkgdir/usr/share/vim/vimfiles/syntax/PKGBUILD.vim"
 }
 

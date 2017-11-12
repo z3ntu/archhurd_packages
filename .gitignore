@@ -1,0 +1,11 @@
+# Ignore everything
+/*/**
+
+# Exclude these files from ignoring
+!/*/PKGBUILD
+!/*/.SRCINFO
+!/*/*.patch
+!/*/*.diff
+!/*/*.install
+!/*/*.hook
+!/*/*.desktop
