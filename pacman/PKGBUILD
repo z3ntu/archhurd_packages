@@ -20,8 +20,8 @@ source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz
         pacman_pipe_buf.patch
         pkginfo.patch)
 md5sums=('f36f5e7e95a89436febe1bcca874fc33'
-         '832776805356ef7a6dcfb2de44ddd9c9'
-         'f5b59fe5f016eebd9590318530bbd996'
+         '54788898e07151c0a719f55a745c8ca8'
+         '9d9452043ef55d2b1186606044f11b82'
          '210e7165adf4fa8822c4eb935bc92935'
          'f738ad83c48dc4104673f7b82e225a23'
          '3f97e8f0f0ba28020cc6191628fe68c4'
