@@ -1,64 +1,86 @@
-# Maintainer: Matthias Lanzinger <mlaenz@gmail.com>
+# vim: set ts=2 sw=2 et:
+# $Id$
+# Maintainer: Dan McGee <dan@archlinux.org>
+# Maintainer: Dave Reisner <dreisner@archlinux.org>
 
 pkgname=pacman
 pkgver=5.0.2
-pkgrel=1
+pkgrel=2
 pkgdesc="A library-based package manager with dependency support"
-arch=(i686)
+arch=('i686' 'x86_64')
 url="http://www.archlinux.org/pacman/"
 license=('GPL')
-groups=('base')
-depends=('bash' 'libarchive>=2.8.4-2' 'libfetch>=2.28' 'pacman-mirrorlist')
-optdepends=('fakeroot: for makepkg usage as normal user'
-	    'curl: for rankmirrors usage')
+groups=('base' 'base-devel')
+depends=('bash' 'glibc' 'libarchive' 'curl'
+         'gpgme' 'pacman-mirrorlist' 'archlinux-keyring')
+makedepends=('asciidoc')
+checkdepends=('python2' 'fakechroot')
+provides=('pacman-contrib')
+conflicts=('pacman-contrib')
+replaces=('pacman-contrib')
 backup=(etc/pacman.conf etc/makepkg.conf)
-source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz
+options=('strip' 'debug')
+validpgpkeys=('6645B0A8C7005E78DB1D7864F99FFE0FEAE999BD'  # Allan McRae <allan@archlinux.org>
+              'B8151B117037781095514CA7BBDFFC92306B1121') # Andrew Gregory (pacman) <andrew@archlinux.org>
+source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz{,.sig}
         pacman.conf
         makepkg.conf
         pacman_hurd.patch
         pacman_hurd_fakeroot.patch
         pacman_pipe_buf.patch
         pkginfo.patch)
-md5sums=('f36f5e7e95a89436febe1bcca874fc33'
-         '54788898e07151c0a719f55a745c8ca8'
-         '9d9452043ef55d2b1186606044f11b82'
-         '210e7165adf4fa8822c4eb935bc92935'
-         'f738ad83c48dc4104673f7b82e225a23'
-         '3f97e8f0f0ba28020cc6191628fe68c4'
-         'ec3531b449794cd5811fdc1818900f2c')
-options=('!zipman')
+sha256sums=('dfd36086ad68564bcd977f4a1fafe51dd328acd4a95093ac4bf1249be9c41f0e'
+            'SKIP'
+            '9af7c21a733753d6fe9ede7c0d8609c953a6dab158f9030b8b55ed971e7263d8'
+            'bf660f527164965ddf867ef9199ee5b15ad1310e5ed423f80b1bce44bcbb376f'
+            '61fb30e39e0ce17e198f69f55488bf25473136858e696b6bc9ab5dc2b5fd4801'
+            '794f420969e4f1278f3ae09b1a142452a425f765f86ea0b164101fd53a6b9660'
+            '0640596c5a29665a4ad46797e5b268545f2b7a70145a3bdd270e9bae7fcfb2bc'
+            '747d2782af09894a4a8d1de465a09cf299d2411e39233c92cd59863f6a7c7820')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+
+  patch -Np2 < "$srcdir"/pacman_hurd.patch
+  patch -Np2 < "$srcdir"/pacman_pipe_buf.patch
+  patch -Np1 < "$srcdir"/pacman_hurd_fakeroot.patch
+  patch -Np1 < "$srcdir"/pkginfo.patch
+}
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$pkgname-$pkgver"
 
-  patch -Np2 < $srcdir/pacman_hurd.patch
-  patch -Np2 < $srcdir/pacman_pipe_buf.patch
-  patch -Np1 < $srcdir/pacman_hurd_fakeroot.patch
-  patch -Np1 < $srcdir/pkginfo.patch
-
-  #as-needed causes a segfault
+  #as-needed causes a segfault (idk if this is still valid... - 2017-11-12)
   export LDFLAGS=""
-  ./configure --prefix=/usr--sysconfdir=/etc \
+
+  ./configure --prefix=/usr --sysconfdir=/etc \
     --localstatedir=/var --enable-doc \
     --with-scriplet-shell=/usr/bin/bash # \
-#    --with-ldconfig=/bin/ldconfig
+#    --with-ldconfig=/usr/bin/ldconfig
   make V=1
   make -C contrib
 }
 
+check() {
+  make -C "$pkgname-$pkgver" check
+}
+
 package() {
-  cd $srcdir/$pkgname-$pkgver
+  cd "$pkgname-$pkgver"
  
   make DESTDIR="$pkgdir" install
   make DESTDIR="$pkgdir" -C contrib install
 
-  install -m644 ${srcdir}/pacman.conf ${pkgdir}/etc/pacman.conf
+  # install Arch specific stuff
+  install -dm755 "$pkgdir/etc"
+  install -m644 "$srcdir/pacman.conf" "$pkgdir/etc/pacman.conf"
 
-  sed -i ${pkgdir}/etc/makepkg.conf \
+  # set things correctly in the default conf file
+  install -m644 "$srcdir/makepkg.conf" "$pkgdir/etc"
+  sed -i "$pkgdir/etc/makepkg.conf" \
     -e "s|@CARCH[@]|i686|g" \
     -e "s|@CHOST[@]|i686-pc-gnu|g" \
     -e "s|@CARCHFLAGS[@]|-march=i686|g"
-
 
   # put bash_completion in the right location
   install -dm755 "$pkgdir/usr/share/bash-completion/completions"
@@ -71,4 +93,3 @@ package() {
 
   install -Dm644 contrib/PKGBUILD.vim "$pkgdir/usr/share/vim/vimfiles/syntax/PKGBUILD.vim"
 }
-
