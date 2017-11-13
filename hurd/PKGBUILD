@@ -1,0 +1,59 @@
+# Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
+
+pkgname=hurd
+pkgver=0.9.r106.g83fef6c8
+pkgrel=1
+pkgdesc="The GNU Hurd"
+arch=(i686)
+url="http://www.gnu.org/software/hurd/hurd.html"
+license=('GPL')
+groups=('base')
+depends=('gnumach' 'glibc')  # initscripts
+makedepends=('git' 'glibc')
+options=('!makeflags')
+backup=(etc/ttys)
+source=(git+https://git.savannah.gnu.org/git/hurd/hurd.git
+        ttys)
+md5sums=('SKIP'
+         '9d20e63e81835c76cc708ce6184f3530')
+
+pkgver() {
+  cd "$pkgname"
+  git describe --long | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  mkdir -p build
+}
+
+build() {
+  cd "$srcdir/build"
+
+  #
+  # BUILD HERE
+  # 
+  export LDFLAGS="$(echo $LDFLAGS | sed 's/-Wl,--as-needed//')"
+  
+  msg2 "Configuring"
+  autoreconf -vif ../$pkgname
+  ../$pkgname/configure --prefix=/usr --disable-profile \
+              --enable-static-progs='iso9660fs,ext2fs,ufs' \
+              --without-parted
+  make
+}
+
+package() {
+  cd "$srcdir/build"
+
+  make prefix="$pkgdir/" install
+
+  install -m 644 $srcdir/ttys $pkgdir/etc/ttys
+
+  # system startup scripts are in the initscripts package
+  rm $pkgdir/libexec/runsystem $pkgdir/libexec/rc
+
+  # for rc.shutdown
+  mv $pkgdir/sbin/halt $pkgdir/sbin/internal_halt
+  mv $pkgdir/sbin/reboot $pkgdir/sbin/internal_reboot
+}
+
