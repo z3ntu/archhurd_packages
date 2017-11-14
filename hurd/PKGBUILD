@@ -24,21 +24,22 @@ pkgver() {
 
 prepare() {
   mkdir -p build
+
+  cd $pkgname
+  autoreconf -fi
 }
 
 build() {
   cd "$srcdir/build"
 
-  #
-  # BUILD HERE
-  # 
+  # TODO: Remove this?
   export LDFLAGS="$(echo $LDFLAGS | sed 's/-Wl,--as-needed//')"
   
-  msg2 "Configuring"
-  autoreconf -vif ../$pkgname
-  ../$pkgname/configure --prefix=/usr --disable-profile \
-              --enable-static-progs='iso9660fs,ext2fs,ufs' \
-              --without-parted
+  ../$pkgname/configure \
+     --prefix=/usr \
+     --disable-profile \
+     --enable-static-progs='iso9660fs,ext2fs,ufs' \
+     --without-parted
   make
 }
 
@@ -55,5 +56,12 @@ package() {
   # for rc.shutdown
   mv $pkgdir/sbin/halt $pkgdir/sbin/internal_halt
   mv $pkgdir/sbin/reboot $pkgdir/sbin/internal_reboot
+
+  # TODO: Fix install prefix (maybe DESTDIR??)
+  mkdir -p "$pkgdir"/usr
+  mv "$pkgdir"/include "$pkgdir"/usr/include
+  mv "$pkgdir"/lib "$pkgdir"/usr/lib
+  mv "$pkgdir"/sbin "$pkgdir"/usr/sbin
+  mv "$pkgdir"/share "$pkgdir"/usr/share
 }
 

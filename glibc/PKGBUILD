@@ -5,7 +5,7 @@
 # NOTE: valgrind requires rebuilt with each major glibc version
 
 pkgname=glibc
-pkgver=2.24
+pkgver=2.23
 pkgrel=1
 #_commit=ccb4fd7a657b0fbc4890c98f4586d58a135fc583
 pkgdesc="GNU C Library"
@@ -35,7 +35,7 @@ prepare() {
 build() {
   cd glibc-build
   ../glibc/configure \
-    --prefix=/ \
+    --prefix=/usr \
     --enable-obsolete-rpc \
     --disable-profile \
     --enable-add-ons=libpthread \
@@ -55,5 +55,8 @@ check() {
 package() {
   cd glibc-build
 
-  make install_root=${pkgdir} install
+  make install_root="$pkgdir" install
+
+  # Add ld.so symlink
+  ln -s ld.so.1 "$pkgdir"/lib/ld.so
 }
