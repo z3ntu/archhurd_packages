@@ -1,0 +1,51 @@
+# DP: Description: Enable ldconfig and such on hurd-i386
+# DP: Author: Jeff Bailey <jbailey@nisa.net>
+# DP: Related Bugs: #309489
+# DP: Upstream status: Not submitted
+# DP: Status Details: Upstream disagrees with this patch, but I'm
+# DP: putting it in so that we have expected Debian behaviour on the
+# DP: Hurd.  We should review this when the ELF standard supports runpath.
+# DP: Date: 08 Apr 2003
+  
+---
+ elf/ldconfig.c                 | 4 ++++
+ sysdeps/mach/hurd/configure    | 2 ++
+ sysdeps/mach/hurd/configure.ac | 2 ++
+ 3 files changed, 8 insertions(+)
+
+
+diff --git a/elf/ldconfig.c b/elf/ldconfig.c
+index 9c6f2ba791..c747b8fe41 100644
+--- a/elf/ldconfig.c
++++ b/elf/ldconfig.c
+@@ -59,6 +59,10 @@
+ 
+ #define PACKAGE _libc_intl_domainname
+ 
++#ifndef PATH_MAX
++#define PATH_MAX 1024
++#endif
++
+ static const struct
+ {
+   const char *name;
+diff --git a/sysdeps/mach/hurd/configure b/sysdeps/mach/hurd/configure
+index 3d155a450e..cba4f7a49a 100644
+--- a/sysdeps/mach/hurd/configure
++++ b/sysdeps/mach/hurd/configure
+@@ -45,3 +45,5 @@ fi
+ if test -n "$sysheaders"; then
+   CPPFLAGS=$OLD_CPPFLAGS
+ fi
++
++use_ldconfig=yes
+diff --git a/sysdeps/mach/hurd/configure.ac b/sysdeps/mach/hurd/configure.ac
+index af9a9ea052..ff3527c1ae 100644
+--- a/sysdeps/mach/hurd/configure.ac
++++ b/sysdeps/mach/hurd/configure.ac
+@@ -24,3 +24,5 @@ fi
+ if test -n "$sysheaders"; then
+   CPPFLAGS=$OLD_CPPFLAGS
+ fi
++
++use_ldconfig=yes

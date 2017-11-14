@@ -13,35 +13,47 @@ arch=('i686' 'x86_64')
 url="http://www.gnu.org/software/libc"
 license=('GPL' 'LGPL')
 groups=('base')
-depends=('tzdata' 'filesystem')
+#depends=('tzdata' 'filesystem') # TODO: Reenable
 makedepends=('gcc>=6' 'git' 'mig')
 backup=(etc/gai.conf
         etc/locale.gen
         etc/nscd.conf)
-	options=('!strip')  #'staticlibs')
+options=('!strip')  #'staticlibs')
 install=glibc.install
 source=(git+https://git.savannah.gnu.org/git/hurd/glibc.git#branch=tschwinge/Roger_Whittaker
-        git+https://git.savannah.gnu.org/git/hurd/libpthread.git)
-md5sums=('SKIP'
-         'SKIP')
+        git+https://git.savannah.gnu.org/git/hurd/libpthread.git
+        local-enable-ldconfig.diff  # patch based on local-enable-ldconfig.diff from Debian
+        Avoid-.symver-on-common-symbols-BZ-21666.patch)
+sha256sums=('SKIP'
+            'SKIP'
+            '292d399060501e5cc0a18d32fcb8ae52df59b218ce3625344c20f05141bdb4ac'
+            'c0ae3348c7d53bfa02b67526a53a095ca835e98ca41723c138edff5e98ff04ef')
 
 prepare() {
   mkdir -p glibc-build
-  if [ ! -d "$srcdir"/libpthread ]; then
+  if [ ! -d "$srcdir"/glibc/libpthread ]; then
     cp -r "$srcdir"/libpthread "$srcdir"/glibc/
   fi
+
+  cd glibc
+  patch -Np1 -i "$srcdir"/local-enable-ldconfig.diff
+  patch -Np1 -i "$srcdir"/Avoid-.symver-on-common-symbols-BZ-21666.patch
 }  
 
 build() {
   cd glibc-build
   ../glibc/configure \
     --prefix=/usr \
+    --libdir=/usr/lib \
+    --libexecdir=/usr/lib \
+    --with-headers=/usr/include \
     --enable-obsolete-rpc \
     --disable-profile \
     --enable-add-ons=libpthread \
     --enable-obsolete-rpc \
     --disable-werror \
     --disable-nscd
+
   make
 }
 
