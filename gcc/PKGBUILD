@@ -17,11 +17,8 @@ url='http://gcc.gnu.org'
 makedepends=(binutils libmpc)
 checkdepends=(dejagnu inetutils)
 options=(!emptydirs)
-source=(http://www.netgull.com/gcc/releases/gcc-$pkgver/gcc-$pkgver.tar.gz
-        c89 c99)
-md5sums=('3124e1563958a24a64210236852f7283'
-         '3d333df77302ed89e06a4a8539943b7d'
-         'da96f545b863e57c6ab2598c1ea9a740')
+source=(http://www.netgull.com/gcc/releases/gcc-$pkgver/gcc-$pkgver.tar.gz)
+md5sums=('3124e1563958a24a64210236852f7283')
 #         '3d333df77302ed89e06a4a8539943b7d'
 #         'da96f545b863e57c6ab2598c1ea9a740'
 #         'e4c9c8b498b04c0f51d219d025ca8407'
@@ -96,7 +93,7 @@ check() {
 package_gcc-libs() {
   pkgdesc='Runtime libraries shipped by GCC'
   groups=('base')
-  depends=('glibc>=2.25')
+  depends=('glibc>=2.23')
   options+=(!strip)
 
   cd gcc-build
@@ -104,15 +101,10 @@ package_gcc-libs() {
   rm -f "$pkgdir/$_libdir/libgcc_eh.a"
 
   for lib in libatomic \
-             libcilkrts \
-             libgfortran \
-             libgo \
              libgomp \
              libitm \
              libquadmath \
-             libsanitizer/{a,l,ub}san \
-             libstdc++-v3/src \
-             libvtv; do
+             libstdc++-v3/src; do
     make -C $CHOST/$lib DESTDIR="$pkgdir" install-toolexeclibLTLIBRARIES
   done
 
@@ -120,10 +112,7 @@ package_gcc-libs() {
     make -C $CHOST/libsanitizer/tsan DESTDIR="$pkgdir" install-toolexeclibLTLIBRARIES
   fi
 
-  make -C $CHOST/libobjc DESTDIR="$pkgdir" install-libs
   make -C $CHOST/libstdc++-v3/po DESTDIR="$pkgdir" install
-  make -C $CHOST/libmpx DESTDIR="$pkgdir" install
-  rm "$pkgdir"/usr/lib/libmpx.spec
 
   for lib in libgomp \
              libitm \
@@ -132,7 +121,7 @@ package_gcc-libs() {
   done
 
   # Install Runtime Library Exception
-  install -Dm644 "$srcdir/gcc/COPYING.RUNTIME" \
+  install -Dm644 "$srcdir/gcc-$pkgver/COPYING.RUNTIME" \
     "$pkgdir/usr/share/licenses/gcc-libs/RUNTIME.LIBRARY.EXCEPTION"
 }
 
@@ -163,6 +152,7 @@ package_gcc() {
   mv "$pkgdir"/usr/lib/libstdc++.so.6.*-gdb.py \
     "$pkgdir/usr/share/gdb/auto-load/usr/lib/"
   rm "$pkgdir"/usr/lib/libstdc++.so*
+  rm "$pkgdir"/usr/lib/libstdc++.{a,la}
 
   make DESTDIR="$pkgdir" install-fixincludes
   make -C gcc DESTDIR="$pkgdir" install-mkheaders
@@ -172,22 +162,15 @@ package_gcc() {
   ln -s /usr/lib/gcc/$CHOST/$pkgver/liblto_plugin.so \
     "$pkgdir/usr/lib/bfd-plugins/"
 
-  make -C $CHOST/libcilkrts DESTDIR="$pkgdir" install-nodist_toolexeclibHEADERS \
-    install-nodist_cilkincludeHEADERS
   make -C $CHOST/libgomp DESTDIR="$pkgdir" install-nodist_toolexeclibHEADERS \
     install-nodist_libsubincludeHEADERS
   make -C $CHOST/libitm DESTDIR="$pkgdir" install-nodist_toolexeclibHEADERS
   make -C $CHOST/libquadmath DESTDIR="$pkgdir" install-nodist_libsubincludeHEADERS
-  make -C $CHOST/libsanitizer DESTDIR="$pkgdir" install-nodist_{saninclude,toolexeclib}HEADERS
-  make -C $CHOST/libsanitizer/asan DESTDIR="$pkgdir" install-nodist_toolexeclibHEADERS
-  make -C $CHOST/libmpx DESTDIR="$pkgdir" install-nodist_toolexeclibHEADERS
 
   make -C libiberty DESTDIR="$pkgdir" install
   install -m644 libiberty/pic/libiberty.a "$pkgdir/usr/lib"
 
   make -C gcc DESTDIR="$pkgdir" install-man install-info
-  rm "$pkgdir"/usr/share/man/man1/{gccgo,gfortran}.1
-  rm "$pkgdir"/usr/share/info/{gccgo,gfortran,gnat-style,gnat_rm,gnat_ugn}.info
 
   make -C libcpp DESTDIR="$pkgdir" install
   make -C gcc DESTDIR="$pkgdir" install-po
@@ -195,12 +178,8 @@ package_gcc() {
   # many packages expect this symlink
   ln -s gcc "$pkgdir"/usr/bin/cc
 
-  # POSIX conformance launcher scripts for c89 and c99
-  install -Dm755 "$srcdir/c89" "$pkgdir/usr/bin/c89"
-  install -Dm755 "$srcdir/c99" "$pkgdir/usr/bin/c99"
-
   # install the libstdc++ man pages
-  make -C $CHOST/libstdc++-v3/doc DESTDIR="$pkgdir" doc-install-man
+  #make -C $CHOST/libstdc++-v3/doc DESTDIR="$pkgdir" doc-install-man
 
   # Install Runtime Library Exception
   install -d "$pkgdir/usr/share/licenses/$pkgname/"
