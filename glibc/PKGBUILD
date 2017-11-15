@@ -46,6 +46,7 @@ build() {
     --prefix=/usr \
     --libdir=/usr/lib \
     --libexecdir=/usr/lib \
+    --sbindir=/usr/bin \
     --with-headers=/usr/include \
     --enable-obsolete-rpc \
     --disable-profile \
@@ -69,6 +70,16 @@ package() {
 
   make install_root="$pkgdir" install
 
+  # Move /lib to /usr/lib
+  mv -b "$pkgdir"/lib/* "$pkgdir"/usr/lib/
+
+  # CHeck if mv didn't overwrite files
+  if ls "$pkgdir"/usr/lib/*~ 1> /dev/null 2>&1; then
+    echo "Files in /usr/lib were overwritten!"
+    echo "Exiting."
+    return 1
+  fi
+
   # Add ld.so symlink
-  ln -s ld.so.1 "$pkgdir"/lib/ld.so
+  ln -s /usr/lib/ld.so.1 "$pkgdir"/lib/ld.so
 }

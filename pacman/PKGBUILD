@@ -12,7 +12,7 @@ url="http://www.archlinux.org/pacman/"
 license=('GPL')
 groups=('base' 'base-devel')
 depends=('bash' 'glibc' 'libarchive' 'curl'
-         'gpgme' 'pacman-mirrorlist' 'archlinux-keyring')
+         'gpgme')  # 'pacman-mirrorlist' 'archlinux-keyring'
 makedepends=('asciidoc')
 checkdepends=('python2' 'fakechroot')
 provides=('pacman-contrib')
