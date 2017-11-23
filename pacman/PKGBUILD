@@ -13,8 +13,8 @@ license=('GPL')
 groups=('base' 'base-devel')
 depends=('bash' 'glibc' 'libarchive' 'curl'
          'gpgme')  # 'pacman-mirrorlist' 'archlinux-keyring'
-makedepends=('asciidoc')
-checkdepends=('python2' 'fakechroot')
+#makedepends=('asciidoc')
+#checkdepends=('python2' 'fakechroot')
 provides=('pacman-contrib')
 conflicts=('pacman-contrib')
 replaces=('pacman-contrib')
@@ -32,7 +32,7 @@ source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz{,.sig
 sha256sums=('dfd36086ad68564bcd977f4a1fafe51dd328acd4a95093ac4bf1249be9c41f0e'
             'SKIP'
             '9af7c21a733753d6fe9ede7c0d8609c953a6dab158f9030b8b55ed971e7263d8'
-            'bf660f527164965ddf867ef9199ee5b15ad1310e5ed423f80b1bce44bcbb376f'
+            '965fee94256d738bda37d9a719d448892ae9db755d8dcd8e6975ff5767338aeb'
             '61fb30e39e0ce17e198f69f55488bf25473136858e696b6bc9ab5dc2b5fd4801'
             '794f420969e4f1278f3ae09b1a142452a425f765f86ea0b164101fd53a6b9660'
             '0640596c5a29665a4ad46797e5b268545f2b7a70145a3bdd270e9bae7fcfb2bc'
@@ -55,8 +55,8 @@ build() {
 
   ./configure --prefix=/usr --sysconfdir=/etc \
     --localstatedir=/var --enable-doc \
-    --with-scriplet-shell=/usr/bin/bash # \
-#    --with-ldconfig=/usr/bin/ldconfig
+    --with-scriptlet-shell=/usr/bin/bash \
+    --with-ldconfig=/usr/bin/ldconfig
   make V=1
   make -C contrib
 }
