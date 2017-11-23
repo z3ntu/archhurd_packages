@@ -1,0 +1,11 @@
+--- ./source/tools/toolutil/udbgutil.cpp.orig	2015-08-03 11:53:13.788781812 +0200
++++ ./source/tools/toolutil/udbgutil.cpp	2015-08-03 11:53:14.736758140 +0200
+@@ -366,8 +366,6 @@
+     return "Linux";
+ #elif U_PLATFORM == U_PF_ANDROID
+     return "Android";
+-#elif U_PLATFORM == U_PF_CLASSIC_MACOS
+-    return "MacOS (Classic)";
+ #elif U_PLATFORM == U_PF_OS390
+     return "IBM z";
+ #elif U_PLATFORM == U_PF_OS400

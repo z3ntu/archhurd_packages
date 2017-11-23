@@ -11,7 +11,7 @@ arch=('i686' 'x86_64')
 url="http://pkgconfig.freedesktop.org/wiki/"
 license=('GPL')
 groups=('base-devel')
-depends=('glib2')
+#depends=('glib2')
 provides=("pkgconfig=${pkgver}")
 conflicts=('pkgconfig')
 replaces=('pkgconfig')

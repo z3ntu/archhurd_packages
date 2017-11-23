@@ -15,8 +15,10 @@ depends=('glibc' 'attr')
 makedepends=('ed')
 optdepends=('ed: for patch -e functionality')
 validpgpkeys=('7768CE4B75E5236F1A374CEEC4C927CD5D1B36D7') # Andreas Gruenbacher
-source=("https://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.xz")
-md5sums=('e3da7940431633fb65a01b91d3b7a27a')
+source=("https://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.xz"
+        path_max.patch)  # from Debian
+md5sums=('e3da7940431633fb65a01b91d3b7a27a'
+         '73afc5922c56d1964f19973f2b3af873')
 
 prepare() {
   cd $pkgname-$pkgver
