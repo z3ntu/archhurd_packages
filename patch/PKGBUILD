@@ -35,7 +35,8 @@ prepare() {
 
 build() {
   cd $pkgname-$pkgver
-  ./configure --prefix=/usr
+  ./configure --prefix=/usr \
+    --disable-xattr  # Otherwise patch will fail with "patch: setting attribute gnu.author for gnu.author: No such file or directory"
   make
 }
 
