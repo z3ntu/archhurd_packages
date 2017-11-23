@@ -72,6 +72,24 @@ package() {
 
   # Move /lib to /usr/lib
   mv -b "$pkgdir"/lib/* "$pkgdir"/usr/lib/
+  ln -sf libanl.so.1 "$pkgdir"/usr/lib/libanl.so
+  ln -sf libBrokenLocale.so.1 "$pkgdir"/usr/lib/libBrokenLocale.so
+  ln -sf libcrypt.so.1 "$pkgdir"/usr/lib/libcrypt.so
+  ln -sf libdl.so.2 "$pkgdir"/usr/lib/libdl.so
+  ln -sf libhurduser.so.0.3 "$pkgdir"/usr/lib/libhurduser.so
+  ln -sf libmachuser.so.1 "$pkgdir"/usr/lib/libmachuser.so
+  ln -sf libm.so.6 "$pkgdir"/usr/lib/libm.so
+  ln -sf libnsl.so.1 "$pkgdir"/usr/lib/libnsl.so
+  ln -sf libnss_compat.so.2 "$pkgdir"/usr/lib/libnss_compat.so
+  ln -sf libnss_db.so.2 "$pkgdir"/usr/lib/libnss_db.so
+  ln -sf libnss_dns.so.2 "$pkgdir"/usr/lib/libnss_dns.so
+  ln -sf libnss_files.so.2 "$pkgdir"/usr/lib/libnss_files.so
+  ln -sf libnss_hesiod.so.2 "$pkgdir"/usr/lib/libnss_hesiod.so
+  ln -sf libnss_nisplus.so.2 "$pkgdir"/usr/lib/libnss_nisplus.so
+  ln -sf libnss_nis.so.2 "$pkgdir"/usr/lib/libnss_nis.so
+  ln -sf libresolv.so.2 "$pkgdir"/usr/lib/libresolv.so
+  ln -sf librt.so.1 "$pkgdir"/usr/lib/librt.so
+  ln -sf libutil.so.1 "$pkgdir"/usr/lib/libutil.so
 
   # CHeck if mv didn't overwrite files
   if ls "$pkgdir"/usr/lib/*~ 1> /dev/null 2>&1; then
