@@ -23,10 +23,12 @@ install=glibc.install
 source=(git+https://git.savannah.gnu.org/git/hurd/glibc.git#branch=tschwinge/Roger_Whittaker
         git+https://git.savannah.gnu.org/git/hurd/libpthread.git
         local-enable-ldconfig.diff  # patch based on local-enable-ldconfig.diff from Debian
+        local-clock_gettime_MONOTONIC.diff  # from Debian
         Avoid-.symver-on-common-symbols-BZ-21666.patch)
 sha256sums=('SKIP'
             'SKIP'
             '292d399060501e5cc0a18d32fcb8ae52df59b218ce3625344c20f05141bdb4ac'
+            '17f015eb50a0b70d865b6b5bd0f7ceb5762cc4e8d7392b2100c8ae9032980454'
             'c0ae3348c7d53bfa02b67526a53a095ca835e98ca41723c138edff5e98ff04ef')
 
 prepare() {
@@ -37,6 +39,7 @@ prepare() {
 
   cd glibc
   patch -Np1 -i "$srcdir"/local-enable-ldconfig.diff
+  patch -Np1 -i "$srcdir"/local-clock_gettime_MONOTONIC.diff
   patch -Np1 -i "$srcdir"/Avoid-.symver-on-common-symbols-BZ-21666.patch
 }  
 
@@ -70,6 +73,10 @@ package() {
 
   make install_root="$pkgdir" install
 
+  # Move sbin files to /usr/bin
+  mv "$pkgdir"/sbin/* "$pkgdir"/usr/bin/
+  rmdir "$pkgdir"/sbin
+
   # Move /lib to /usr/lib
   mv -b "$pkgdir"/lib/* "$pkgdir"/usr/lib/
   ln -sf libanl.so.1 "$pkgdir"/usr/lib/libanl.so
@@ -98,6 +105,6 @@ package() {
     return 1
   fi
 
-  # Add ld.so symlink
-  ln -s /usr/lib/ld.so.1 "$pkgdir"/lib/ld.so
+  # Add ld.so symlink because gcc has ld.so hardcoded for Hurd
+  ln -s ld.so.1 "$pkgdir"/usr/lib/ld.so
 }

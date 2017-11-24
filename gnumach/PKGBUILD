@@ -1,29 +1,34 @@
 # Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
 
 pkgname=gnumach
-pkgver=1.8
+pkgver=1.8.r40.gde813a9c
 pkgrel=1
 pkgdesc="GNU Mach"
 arch=(i686)
 url="http://www.gnu.org/software/hurd/microkernel/mach/gnumach.html"
 license=('GPL')
 groups=('base')
-makedepends=('mig' 'glibc')
-source=(http://git.savannah.gnu.org/cgit/hurd/gnumach.git/snapshot/gnumach-$pkgver.tar.gz)
-sha512sums=('d10c8235d268a6844ad5c60a05b8d6b590a81131521bf62db9834659cb5b9d05b3ff8ca6bc17555bb6ef58ca21e296ebf78aa0541614b6b793e8eb6c1554b808')
+makedepends=('git' 'mig' 'glibc')
+source=(git+https://git.savannah.gnu.org/git/hurd/gnumach.git)
+sha512sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+  git describe --long | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
 
 prepare() {
   rm -rf build
   mkdir build
 
-  cd $pkgname-$pkgver
+  cd $pkgname
   autoreconf -fi
 }
 
 build() {
   cd build
 
-  ../$pkgname-$pkgver/configure \
+  ../$pkgname/configure \
     --prefix=/usr \
     --libexecdir=/usr/lib
   make

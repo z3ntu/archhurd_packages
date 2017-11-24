@@ -1,0 +1,67 @@
+Use the realtime clock for the monotonic clock. This is of course not a proper
+implementation (which is being done in Mach), but will permit to fix at least
+the iceweasel stack.
+
+vlc however doesn't build when _POSIX_CLOCK_SELECTION is enabled but
+_POSIX_TIMERS is not, and they refuse to fix that (see #765578), so disable the
+former.
+
+---
+ sysdeps/mach/hurd/bits/posix_opt.h |    2 +-
+ sysdeps/unix/clock_gettime.c       |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+Index: glibc-2.24/sysdeps/unix/clock_gettime.c
+===================================================================
+--- glibc-2.24.orig/sysdeps/unix/clock_gettime.c
++++ glibc-2.24/sysdeps/unix/clock_gettime.c
+@@ -101,6 +101,7 @@ __clock_gettime (clockid_t clock_id, str
+ 
+ #ifndef HANDLED_REALTIME
+     case CLOCK_REALTIME:
++    case CLOCK_MONOTONIC:
+       {
+ 	struct timeval tv;
+ 	retval = gettimeofday (&tv, NULL);
+Index: glibc-2.24/sysdeps/posix/clock_getres.c
+===================================================================
+--- glibc-2.24.orig/sysdeps/posix/clock_getres.c
++++ glibc-2.24/sysdeps/posix/clock_getres.c
+@@ -88,6 +88,7 @@ __clock_getres (clockid_t clock_id, stru
+ 
+ #ifndef HANDLED_REALTIME
+     case CLOCK_REALTIME:
++    case CLOCK_MONOTONIC:
+       retval = realtime_getres (res);
+       break;
+ #endif	/* handled REALTIME */
+Index: glibc-2.24/sysdeps/pthread/timer_create.c
+===================================================================
+--- glibc-2.24.orig/sysdeps/pthread/timer_create.c
++++ glibc-2.24/sysdeps/pthread/timer_create.c
+@@ -48,7 +48,7 @@ timer_create (clockid_t clock_id, struct
+       return -1;
+     }
+ 
+-  if (clock_id != CLOCK_REALTIME)
++  if (clock_id != CLOCK_REALTIME && clock_id != CLOCK_MONOTONIC)
+     {
+       __set_errno (EINVAL);
+       return -1;
+Index: glibc-2.24/sysdeps/mach/hurd/bits/posix_opt.h
+===================================================================
+--- glibc-2.24.orig/sysdeps/mach/hurd/bits/posix_opt.h
++++ glibc-2.24/sysdeps/mach/hurd/bits/posix_opt.h
+@@ -163,10 +163,10 @@
+ #define _POSIX_THREAD_PROCESS_SHARED	-1
+ 
+ /* The monotonic clock might be available.  */
+-#define _POSIX_MONOTONIC_CLOCK	0
++#define _POSIX_MONOTONIC_CLOCK	200809L
+ 
+-/* The clock selection interfaces are available.  */
+-#define _POSIX_CLOCK_SELECTION	200809L
++/* The clock selection interfaces are not really available yet.  */
++#define _POSIX_CLOCK_SELECTION	-1
+ 
+ /* Advisory information interfaces could be available in future.  */
+ #define _POSIX_ADVISORY_INFO	0
