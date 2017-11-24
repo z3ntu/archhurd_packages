@@ -1,0 +1,44 @@
+# $Id$
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Alexander F Rødseth <xyproto@archlinux.org>
+# Contributor: Chris Brannon <cmbrannon79@gmail.com>
+# Contributor: Geoffroy Carrier <geoffroy.carrier@aur.archlinux.org>
+# Contributor: Arvid Ephraim Picciani <aep@exys.org>
+# Contributor: Michael Krauss <hippodriver@gmx.net>
+
+pkgname=python-pyparsing
+pkgname=('python-pyparsing')
+pkgver=2.2.0
+pkgrel=1
+pkgdesc='General parsing module for Python'
+arch=('any')
+url='http://pyparsing.wikispaces.com/'
+makedepends=('python-setuptools')
+license=('MIT')
+source=("https://pypi.python.org/packages/3c/ec/a94f8cf7274ea60b5413df054f82a8980523efd712ec55a59e7c3357cf7c/pyparsing-2.2.0.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$srcdir"/pyparsing-$pkgver
+  python setup.py build
+}
+
+package_python-pyparsing() {
+  depends=('python')
+
+  cd pyparsing-$pkgver
+
+  python setup.py install --prefix=/usr --root="$pkgdir" --optimize=1
+  install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+package_python2-pyparsing() {
+  depends=('python2')
+
+  cd pyparsing-$pkgver-py2
+
+  python2 setup.py install --prefix=/usr --root="$pkgdir" --optimize=1
+  install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+# vim:set ts=2 sw=2 et:

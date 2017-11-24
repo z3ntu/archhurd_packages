@@ -79,6 +79,7 @@ package() {
 
   # Move /lib to /usr/lib
   mv -b "$pkgdir"/lib/* "$pkgdir"/usr/lib/
+  rmdir "$pkgdir"/lib
   ln -sf libanl.so.1 "$pkgdir"/usr/lib/libanl.so
   ln -sf libBrokenLocale.so.1 "$pkgdir"/usr/lib/libBrokenLocale.so
   ln -sf libcrypt.so.1 "$pkgdir"/usr/lib/libcrypt.so
