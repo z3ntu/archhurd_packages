@@ -10,8 +10,8 @@ pkgver=${_pkgmajor}
 pkgrel=2
 pkgdesc="Miscellaneous system utilities for Linux"
 url="https://www.kernel.org/pub/linux/utils/util-linux/"
-arch=('i686' 'x86_64')
-#makedepends=('libcap-ng')
+arch=('x86_64')
+makedepends=('python')
 license=('GPL2')
 options=('strip' 'debug')
 validpgpkeys=('B0C64D14301CC6EFAEDF60E4E4B71D5EEC39C284')  # Karel Zak
@@ -42,7 +42,8 @@ build() {
               --enable-vipw \
               --enable-newgrp \
               --enable-write \
-              --enable-mesg
+              --enable-mesg \
+              --with-python=3
 
   make
 }
@@ -51,7 +52,7 @@ package_util-linux() {
   conflicts=('eject' 'zramctl' 'rfkill')
   provides=('eject' 'zramctl' 'rfkill')
   replaces=('zramctl' 'rfkill')
-  depends=('pam' 'shadow' 'coreutils' 'libcap-ng' 'libutil-linux')
+  depends=('shadow' 'coreutils' 'libutil-linux')
   optdepends=('python: python bindings to libmount')
   groups=('base' 'base-devel')
   backup=(etc/pam.d/chfn
