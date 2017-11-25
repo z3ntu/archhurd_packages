@@ -12,9 +12,11 @@ depends=(glibc libtasn1 libffi)
 makedepends=(gtk-doc git)
 _commit=794385d24fe794455798946ce9de1e2280e78a8c  # tags/0.23.3^0
 source=("git+https://github.com/p11-glue/p11-kit#commit=$_commit"
-        libnssckbi-compat.patch)
+        libnssckbi-compat.patch
+        Support-loading-new-NSS-attribute-CKA_NSS_MOZILLA_CA_POLICY-from-.p11-kit-files)
 sha256sums=('SKIP'
-            '8f763cdbc6c0ca6c5a7898f9fd6f3018b7ac5b1aca36f67c6c813343c2962962')
+            '8f763cdbc6c0ca6c5a7898f9fd6f3018b7ac5b1aca36f67c6c813343c2962962'
+            'fe8db733f13e04d63ed2fe95725aeb7ef3f4cdb75153e39a79e64edec36fba14')
 validpgpkeys=('C0F67099B808FB063E2C81117BFB1108D92765AF')
 
 pkgver() {
@@ -30,6 +32,7 @@ prepare() {
   # libnssckbi.so ("Builtin Object Token" instead of "Default Trust")
   # https://bugs.freedesktop.org/show_bug.cgi?id=66161
   patch -Np1 -i ../libnssckbi-compat.patch
+  patch -Np1 -i ../Support-loading-new-NSS-attribute-CKA_NSS_MOZILLA_CA_POLICY-from-.p11-kit-files
 
   NOCONFIGURE=1 ./autogen.sh
 }

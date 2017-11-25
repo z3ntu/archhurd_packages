@@ -4,7 +4,7 @@
 # Contributer: Allan McRae <allan@archlinux.org>
 
 pkgbase=python-six
-pkgname=('python-six')
+pkgname=('python2-six' 'python-six')
 pkgver=1.11.0
 pkgrel=1
 pkgdesc="Python 2 and 3 compatibility utilities"
@@ -23,6 +23,9 @@ build() {
 check() {
   cd "$srcdir"/six-$pkgver
   python setup.py pytest
+
+  cd "$srcdir"/six-$pkgver-py2
+  python2 setup.py pytest
 }
 
 package_python-six() {

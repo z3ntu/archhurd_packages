@@ -3,14 +3,14 @@
 # Contributor: Tobias Roettger <toroettg@gmail.com>
 
 pkgbase=python-appdirs
-pkgname=(python-appdirs)
+pkgname=(python-appdirs python2-appdirs)
 pkgver=1.4.3
 pkgrel=1
 pkgdesc='A small Python module for determining appropriate platform-specific dirs, e.g. a "user data dir".'
 arch=('any')
 url="https://github.com/ActiveState/appdirs"
 license=('MIT')
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python2-setuptools')
 source=("https://pypi.io/packages/source/a/appdirs/appdirs-$pkgver.tar.gz")
 md5sums=('44c679904082a2133f5566c8a0d3ab42')
 
@@ -21,11 +21,17 @@ prepare() {
 build() {
   cd "$srcdir"/appdirs-$pkgver
   python setup.py build
+
+  cd "$srcdir"/appdirs-$pkgver-py2
+  python2 setup.py build
 }
 
 check() {
   cd "$srcdir"/appdirs-$pkgver
   python setup.py test
+
+  cd "$srcdir"/appdirs-$pkgver-py2
+  python2 setup.py test
 }
 
 package_python-appdirs() {

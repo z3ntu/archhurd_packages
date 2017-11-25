@@ -1,0 +1,11 @@
+--- a/nss/build.sh	2017-11-25 05:44:57.000000000 +0000
++++ b/nss/build.sh	2017-11-25 05:45:14.000000000 +0000
+@@ -52,7 +52,7 @@
+ no_local_nspr=0
+ armhf=0
+ 
+-gyp_params=(--depth="$cwd" --generator-output="." -Ddisable_libpkix=0)
++gyp_params=(--depth="$cwd" --generator-output="." -Ddisable_libpkix=0 --no-parallel)
+ nspr_params=()
+ ninja_params=()
+ 

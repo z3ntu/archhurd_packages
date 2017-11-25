@@ -7,20 +7,27 @@
 # Contributor: Michael Krauss <hippodriver@gmx.net>
 
 pkgname=python-pyparsing
-pkgname=('python-pyparsing')
+pkgname=('python-pyparsing' 'python2-pyparsing')
 pkgver=2.2.0
 pkgrel=1
 pkgdesc='General parsing module for Python'
 arch=('any')
 url='http://pyparsing.wikispaces.com/'
-makedepends=('python-setuptools')
+makedepends=('python-setuptools' 'python2-setuptools')
 license=('MIT')
 source=("https://pypi.python.org/packages/3c/ec/a94f8cf7274ea60b5413df054f82a8980523efd712ec55a59e7c3357cf7c/pyparsing-2.2.0.tar.gz")
 sha256sums=('SKIP')
 
+prepare() {
+  cp -a pyparsing-$pkgver{,-py2}
+}
+
 build() {
   cd "$srcdir"/pyparsing-$pkgver
   python setup.py build
+
+  cd "$srcdir"/pyparsing-$pkgver-py2
+  python2 setup.py build
 }
 
 package_python-pyparsing() {

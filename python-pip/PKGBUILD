@@ -2,14 +2,14 @@
 # Maintainer: Dan McGee <dan@archlinux.org>
 # Contributor: Sebastien Binet <binet@lblbox>
 
-pkgname=('python-pip')
+pkgname=('python-pip' 'python2-pip')
 pkgver=9.0.1
 pkgrel=3
 pkgdesc="The PyPA recommended tool for installing Python packages"
 url="https://pip.pypa.io/"
 arch=('any')
 license=('MIT')
-makedepends=('python' 'python-setuptools')
+makedepends=('python' 'python-setuptools' 'python2' 'python2-setuptools')
 source=(https://pypi.io/packages/source/p/pip/pip-${pkgver}.tar.gz)
 md5sums=('35f01da33009719497f01a4ba69d63c9')
 sha256sums=('09f243e1a7b461f654c26a725fa373211bb7ff17a9300058b205c61658ca940d')

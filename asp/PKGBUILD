@@ -1,0 +1,32 @@
+# $Id$
+# Maintainer: Dave Reisner <d@falconindy.com>
+
+pkgname=asp
+pkgver=2
+pkgrel=1
+pkgdesc="Arch Linux build source file management tool"
+arch=(any)
+url="https://github.com/falconindy/asp"
+license=(MIT)
+depends=(awk bash jq git libarchive)
+#makedepends=(asciidoc)
+source=($pkgname-$pkgver.tar.gz::https://github.com/falconindy/asp/archive/v$pkgver.tar.gz
+        no-man.patch)
+sha256sums=('e136e4c16850a97a510fb98a169f4a401adad7fc0575af2202e926327265dd4b'
+            '035c8096e5d5327a01765f1d632d8cc2ab33487e2abd89f84e73803e0b488cd6')
+
+prepare() {
+  cd asp-$pkgver
+  patch -Np1 < "$srcdir"/no-man.patch
+}
+
+build() {
+  make -C asp-$pkgver
+}
+
+package() {
+  make -C asp-$pkgver PREFIX=/usr DESTDIR="$pkgdir" install
+  install -Dm644 asp-$pkgver/LICENSE "$pkgdir/usr/share/licenses/asp/LICENSE"
+}
+
+# vim: ft=sh syn=sh et
