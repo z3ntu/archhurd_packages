@@ -1,0 +1,27 @@
+From 66f7a3623a184e04adb2c33fe85cbd00cb20b3d4 Mon Sep 17 00:00:00 2001
+From: Jan Beich <jbeich@FreeBSD.org>
+Date: Fri, 23 Jun 2017 17:24:16 +0200
+Subject: [PATCH] Bug 1350966 - Enable adaptive mutex usage on FreeBSD. r=kaie
+
+---
+ pr/src/pthreads/ptsynch.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/pr/src/pthreads/ptsynch.c b/pr/src/pthreads/ptsynch.c
+index 8663a4c7..25120533 100644
+--- a/pr/src/pthreads/ptsynch.c
++++ b/pr/src/pthreads/ptsynch.c
+@@ -55,11 +55,10 @@ void _PR_InitLocks(void)
+     rv = _PT_PTHREAD_MUTEXATTR_INIT(&_pt_mattr); 
+     PR_ASSERT(0 == rv);
+ 
+-#ifdef LINUX
+-#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 2)
++#if (defined(LINUX) && (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 2)) || \
++    (defined(FREEBSD) && __FreeBSD_version > 700055)
+     rv = pthread_mutexattr_settype(&_pt_mattr, PTHREAD_MUTEX_ADAPTIVE_NP);
+     PR_ASSERT(0 == rv);
+-#endif
+ #endif
+ 
+     rv = _PT_PTHREAD_CONDATTR_INIT(&_pt_cvar_attr);
