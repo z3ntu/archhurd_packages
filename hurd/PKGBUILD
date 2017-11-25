@@ -58,10 +58,15 @@ package() {
   mv $pkgdir/sbin/reboot $pkgdir/sbin/internal_reboot
 
   # TODO: Fix install prefix (maybe DESTDIR??)
-  mkdir -p "$pkgdir"/usr
+  mkdir -p "$pkgdir"/usr/bin
   mv "$pkgdir"/include "$pkgdir"/usr/include
   mv "$pkgdir"/lib "$pkgdir"/usr/lib
-  mv "$pkgdir"/sbin "$pkgdir"/usr/sbin
+  mv "$pkgdir"/sbin/* "$pkgdir"/usr/bin
+  # ArchHurd TODO: Move /bin to /usr/hin - conflicts with executables from shadow
+#  mv "$pkgdir"/bin/* "$pkgdir"/usr/bin
+  rmdir "$pkgdir"/sbin # "$pkgdir"/bin
   mv "$pkgdir"/share "$pkgdir"/usr/share
+  mv "$pkgdir"/libexec/* "$pkgdir"/usr/lib
+  rmdir "$pkgdir"/libexec
 }
 

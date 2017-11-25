@@ -1,0 +1,8 @@
+##
+## Arch Hurd repository mirrorlist
+## Updated on 2017-11-25
+##
+
+## Netherlands
+#Server = https://private.z3ntu.xyz/archhurd/$repo/os/$arch
+

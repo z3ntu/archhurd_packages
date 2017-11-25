@@ -12,9 +12,9 @@ url="http://www.archlinux.org/pacman/"
 license=('GPL')
 groups=('base' 'base-devel')
 depends=('bash' 'glibc' 'libarchive' 'curl'
-         'gpgme')  # 'pacman-mirrorlist' 'archlinux-keyring'
-#makedepends=('asciidoc')
-#checkdepends=('python2' 'fakechroot')
+         'gpgme' 'pacman-mirrorlist')  # 'archhurd-keyring'
+makedepends=('asciidoc')
+checkdepends=('python2')
 provides=('pacman-contrib')
 conflicts=('pacman-contrib')
 replaces=('pacman-contrib')
@@ -31,8 +31,8 @@ source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz{,.sig
         pkginfo.patch)
 sha256sums=('dfd36086ad68564bcd977f4a1fafe51dd328acd4a95093ac4bf1249be9c41f0e'
             'SKIP'
-            '9af7c21a733753d6fe9ede7c0d8609c953a6dab158f9030b8b55ed971e7263d8'
-            '965fee94256d738bda37d9a719d448892ae9db755d8dcd8e6975ff5767338aeb'
+            'a1c324e32bcd637a36cd62e8b63f64c377c7eaba49f8d139b2a3e472d5dab1b1'
+            '79b331284687b1241276dd826c772005bee13fab62b8b59404c33c6fed4ef3a9'
             '61fb30e39e0ce17e198f69f55488bf25473136858e696b6bc9ab5dc2b5fd4801'
             '794f420969e4f1278f3ae09b1a142452a425f765f86ea0b164101fd53a6b9660'
             '0640596c5a29665a4ad46797e5b268545f2b7a70145a3bdd270e9bae7fcfb2bc'
