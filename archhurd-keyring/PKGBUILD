@@ -1,0 +1,28 @@
+# $Id$
+# Maintainer: Pierre Schmitz <pierre@archlinux.de>
+
+pkgname=archhurd-keyring
+pkgver=20171126
+pkgrel=1
+pkgdesc='Arch Hurd PGP keyring'
+arch=('any')
+url='https://projects.archlinux.org/archlinux-keyring.git/'
+license=('GPL')
+install="${pkgname}.install"
+source=("https://github.com/z3ntu/${pkgname}/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.gz"
+	"https://github.com/z3ntu/${pkgname}/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.gz.sig"
+	Don-t-install-non-existing-revoked-keys.patch)
+sha256sums=('a583154530e90831c5aace256fb8f38573ce629f58656af35450ff3d654fbafc'
+            'SKIP'
+            '4c29202c84c364d74aaa089ee197aa13990286f9f9116cd1f3c725ace7a91222')
+validpgpkeys=('BD04DA24C971B8D587B2B8D7FAF69CF6CD2D02CD')  # Luca Weiss
+
+prepare() {
+	cd "${srcdir}/${pkgname}-${pkgver}"
+	patch -Np1 -i "$srcdir"/Don-t-install-non-existing-revoked-keys.patch
+}
+
+package() {
+	cd "${srcdir}/${pkgname}-${pkgver}"
+	make PREFIX=/usr DESTDIR=${pkgdir} install
+}

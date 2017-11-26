@@ -1,0 +1,26 @@
+From e1986a22428d07bfd18ce27fc82193263b9f4836 Mon Sep 17 00:00:00 2001
+From: Luca Weiss <luca@z3ntu.xyz>
+Date: Sun, 26 Nov 2017 01:37:41 +0100
+Subject: [PATCH] Don't install non-existing revoked keys
+
+---
+ Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 4555270..83ad85b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -4,10 +4,10 @@ PREFIX = /usr/local
+ 
+ install:
+ 	install -dm755 $(DESTDIR)$(PREFIX)/share/pacman/keyrings/
+-	install -m0644 archhurd{.gpg,-trusted,-revoked} $(DESTDIR)$(PREFIX)/share/pacman/keyrings/
++	install -m0644 archhurd{.gpg,-trusted} $(DESTDIR)$(PREFIX)/share/pacman/keyrings/
+ 
+ uninstall:
+-	rm -f $(DESTDIR)$(PREFIX)/share/pacman/keyrings/archhurd{.gpg,-trusted,-revoked}
++	rm -f $(DESTDIR)$(PREFIX)/share/pacman/keyrings/archhurd{.gpg,-trusted}
+ 	rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(PREFIX)/share/pacman/keyrings/
+ 
+ dist:
