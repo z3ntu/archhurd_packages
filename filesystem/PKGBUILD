@@ -141,6 +141,7 @@ package() {
 #	ln -s usr/bin "$pkgdir"/bin # ArchHurd TODO: Reenable these symlinks
 	ln -s usr/bin "$pkgdir"/sbin
 #	ln -s bin "$pkgdir"/usr/sbin
+	ln -s usr/include "$pkgdir"/include
 
 	#
 	# install archlinux(7) manpage
