@@ -62,11 +62,15 @@ package() {
   mv "$pkgdir"/include "$pkgdir"/usr/include
   mv "$pkgdir"/lib "$pkgdir"/usr/lib
   mv "$pkgdir"/sbin/* "$pkgdir"/usr/bin
-  # ArchHurd TODO: Move /bin to /usr/hin - conflicts with executables from shadow
-#  mv "$pkgdir"/bin/* "$pkgdir"/usr/bin
-  rmdir "$pkgdir"/sbin # "$pkgdir"/bin
+  mv "$pkgdir"/bin/* "$pkgdir"/usr/bin
+  rmdir "$pkgdir"/sbin "$pkgdir"/bin
   mv "$pkgdir"/share "$pkgdir"/usr/share
   mv "$pkgdir"/libexec/* "$pkgdir"/usr/lib
   rmdir "$pkgdir"/libexec
+
+  # uptime gets provided by procps-ng
+  mv "$pkgdir"/usr/bin/uptime{,-hurd}
+  # fsck gets provided by util-linux
+  mv "$pkgdir"/usr/bin/fsck{,-hurd}
 }
 

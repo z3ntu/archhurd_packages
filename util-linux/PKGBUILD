@@ -39,7 +39,6 @@ build() {
               --bindir=/usr/bin \
               --localstatedir=/run \
               --enable-fs-paths-extra=/usr/bin \
-              --enable-vipw \
               --enable-newgrp \
               --enable-write \
               --enable-mesg \
@@ -78,11 +77,11 @@ package_util-linux() {
   # adjust for usrmove
   # TODO(dreisner): fix configure.ac upstream so that this isn't needed
   cd "$pkgdir"
-  mv {,usr/}sbin/* usr/bin
+  mv sbin/* usr/bin
   rmdir sbin usr/sbin
 
   ### runtime libs are shipped as part of libutil-linux
-  rm "$pkgdir"/usr/lib/lib*.{a,so}*
+  rm "$pkgdir"/usr/lib/lib*.{a,so,la}*
 
   ### install systemd-sysusers
   install -Dm644 "$srcdir/util-linux.sysusers" \
@@ -95,6 +94,9 @@ package_util-linux() {
     "$pkgdir/usr/lib/systemd/system/rfkill-unblock@.service"
   install -Dm644 "$srcdir/rfkill-block_.service" \
     "$pkgdir/usr/lib/systemd/system/rfkill-block@.service"
+
+  # nologin gets provided by shadow
+  mv "$pkgdir"/usr/bin/nologin{,-util-linux}
 }
 
 package_libutil-linux() {

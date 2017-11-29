@@ -49,4 +49,8 @@ build() {
 package() {
 	cd "${srcdir}/${pkgname}-${pkgver}"
 	make DESTDIR="${pkgdir}" install
+
+	mv "$pkgdir"/usr/bin/ps{,-procps}
+	mv "$pkgdir"/usr/bin/vmstat{,-procps}
+	mv "$pkgdir"/usr/bin/w{,-procps}
 }
