@@ -7,31 +7,28 @@
 pkgname=glibc
 pkgver=2.23
 pkgrel=1
-#_commit=ccb4fd7a657b0fbc4890c98f4586d58a135fc583
-pkgdesc="GNU C Library"
-arch=('i686' 'x86_64')
+arch=(i686)
 url="http://www.gnu.org/software/libc"
-license=('GPL' 'LGPL')
-groups=('base')
-#depends=('tzdata' 'filesystem') # TODO: Reenable
-makedepends=('gcc>=6' 'git' 'mig')
-backup=(etc/gai.conf
-        etc/locale.gen
-        etc/nscd.conf)
-options=('!strip')  #'staticlibs')
-install=glibc.install
+license=(GPL LGPL)
+makedepends=(git mig)
+options=(!strip staticlibs !emptydirs)
 source=(git+https://git.savannah.gnu.org/git/hurd/glibc.git#branch=tschwinge/Roger_Whittaker
         git+https://git.savannah.gnu.org/git/hurd/libpthread.git
+        locale.gen.txt
+        locale-gen
         local-enable-ldconfig.diff  # patch based on local-enable-ldconfig.diff from Debian
         local-clock_gettime_MONOTONIC.diff  # from Debian
         Avoid-.symver-on-common-symbols-BZ-21666.patch)
 sha256sums=('SKIP'
             'SKIP'
+            '748d0ccc57d302fcb1e626ce9398fa3a66830e1455cb0b0d31c6ffd7ac4d02bb'
+            '83f108f915863c7ed0338e2d3e8f2e071a531a090ef8f8b2eb3a956a3c4f04d7'
             '292d399060501e5cc0a18d32fcb8ae52df59b218ce3625344c20f05141bdb4ac'
             '17f015eb50a0b70d865b6b5bd0f7ceb5762cc4e8d7392b2100c8ae9032980454'
             'c0ae3348c7d53bfa02b67526a53a095ca835e98ca41723c138edff5e98ff04ef')
 
 prepare() {
+  rm -rf glibc-build
   mkdir -p glibc-build
   if [ ! -d "$srcdir"/glibc/libpthread ]; then
     cp -r "$srcdir"/libpthread "$srcdir"/glibc/
@@ -45,11 +42,16 @@ prepare() {
 
 build() {
   cd glibc-build
+
+  echo "slibdir=/usr/lib" >> configparms
+  echo "rtlddir=/usr/lib" >> configparms
+  echo "sbindir=/usr/bin" >> configparms
+  echo "rootsbindir=/usr/bin" >> configparms
+
   ../glibc/configure \
     --prefix=/usr \
     --libdir=/usr/lib \
     --libexecdir=/usr/lib \
-    --sbindir=/usr/bin \
     --with-headers=/usr/include \
     --enable-obsolete-rpc \
     --disable-profile \
@@ -69,42 +71,69 @@ check() {
 }
 
 package() {
-  cd glibc-build
+  pkgdesc='GNU C Library'
+  depends=('linux-api-headers>=4.10' tzdata filesystem)
+  optdepends=('gd: for memusagestat')
+  install=glibc.install
+  backup=(etc/gai.conf
+          etc/locale.gen
+          etc/nscd.conf)
+  groups=(base)
 
-  make install_root="$pkgdir" install
+  install -dm755 "$pkgdir/etc"
+  touch "$pkgdir/etc/ld.so.conf"
+
+  make -C glibc-build install_root="$pkgdir" install
+  rm -f "$pkgdir"/etc/ld.so.{cache,conf}
+
+  cd glibc
+
+  install -dm755 "$pkgdir"/usr/lib/locale
+  install -m644 nscd/nscd.conf "$pkgdir/etc/nscd.conf"
+  install -dm755 "$pkgdir/var/db/nscd"
+
+  install -m644 posix/gai.conf "$pkgdir"/etc/gai.conf
+
+  install -m755 "$srcdir/locale-gen" "$pkgdir/usr/bin"
+
+
+  # create /etc/locale.gen
+  install -m644 "$srcdir/locale.gen.txt" "$pkgdir/etc/locale.gen"
+  sed -e '1,3d' -e 's|/| |g' -e 's|\\| |g' -e 's|^|#|g' \
+    "$srcdir/glibc/localedata/SUPPORTED" >> "$pkgdir/etc/locale.gen"
 
   # Move sbin files to /usr/bin
-  mv "$pkgdir"/sbin/* "$pkgdir"/usr/bin/
-  rmdir "$pkgdir"/sbin
-
-  # Move /lib to /usr/lib
-  mv -b "$pkgdir"/lib/* "$pkgdir"/usr/lib/
-  rmdir "$pkgdir"/lib
-  ln -sf libanl.so.1 "$pkgdir"/usr/lib/libanl.so
-  ln -sf libBrokenLocale.so.1 "$pkgdir"/usr/lib/libBrokenLocale.so
-  ln -sf libcrypt.so.1 "$pkgdir"/usr/lib/libcrypt.so
-  ln -sf libdl.so.2 "$pkgdir"/usr/lib/libdl.so
-  ln -sf libhurduser.so.0.3 "$pkgdir"/usr/lib/libhurduser.so
-  ln -sf libmachuser.so.1 "$pkgdir"/usr/lib/libmachuser.so
-  ln -sf libm.so.6 "$pkgdir"/usr/lib/libm.so
-  ln -sf libnsl.so.1 "$pkgdir"/usr/lib/libnsl.so
-  ln -sf libnss_compat.so.2 "$pkgdir"/usr/lib/libnss_compat.so
-  ln -sf libnss_db.so.2 "$pkgdir"/usr/lib/libnss_db.so
-  ln -sf libnss_dns.so.2 "$pkgdir"/usr/lib/libnss_dns.so
-  ln -sf libnss_files.so.2 "$pkgdir"/usr/lib/libnss_files.so
-  ln -sf libnss_hesiod.so.2 "$pkgdir"/usr/lib/libnss_hesiod.so
-  ln -sf libnss_nisplus.so.2 "$pkgdir"/usr/lib/libnss_nisplus.so
-  ln -sf libnss_nis.so.2 "$pkgdir"/usr/lib/libnss_nis.so
-  ln -sf libresolv.so.2 "$pkgdir"/usr/lib/libresolv.so
-  ln -sf librt.so.1 "$pkgdir"/usr/lib/librt.so
-  ln -sf libutil.so.1 "$pkgdir"/usr/lib/libutil.so
-
-  # CHeck if mv didn't overwrite files
-  if ls "$pkgdir"/usr/lib/*~ 1> /dev/null 2>&1; then
-    echo "Files in /usr/lib were overwritten!"
-    echo "Exiting."
-    return 1
-  fi
+#  mv "$pkgdir"/sbin/* "$pkgdir"/usr/bin/
+#  rmdir "$pkgdir"/sbin
+#
+#  # Move /lib to /usr/lib
+#  mv -b "$pkgdir"/lib/* "$pkgdir"/usr/lib/
+#  rmdir "$pkgdir"/lib
+#  ln -sf libanl.so.1 "$pkgdir"/usr/lib/libanl.so
+#  ln -sf libBrokenLocale.so.1 "$pkgdir"/usr/lib/libBrokenLocale.so
+#  ln -sf libcrypt.so.1 "$pkgdir"/usr/lib/libcrypt.so
+#  ln -sf libdl.so.2 "$pkgdir"/usr/lib/libdl.so
+#  ln -sf libhurduser.so.0.3 "$pkgdir"/usr/lib/libhurduser.so
+#  ln -sf libmachuser.so.1 "$pkgdir"/usr/lib/libmachuser.so
+#  ln -sf libm.so.6 "$pkgdir"/usr/lib/libm.so
+#  ln -sf libnsl.so.1 "$pkgdir"/usr/lib/libnsl.so
+#  ln -sf libnss_compat.so.2 "$pkgdir"/usr/lib/libnss_compat.so
+#  ln -sf libnss_db.so.2 "$pkgdir"/usr/lib/libnss_db.so
+#  ln -sf libnss_dns.so.2 "$pkgdir"/usr/lib/libnss_dns.so
+#  ln -sf libnss_files.so.2 "$pkgdir"/usr/lib/libnss_files.so
+#  ln -sf libnss_hesiod.so.2 "$pkgdir"/usr/lib/libnss_hesiod.so
+#  ln -sf libnss_nisplus.so.2 "$pkgdir"/usr/lib/libnss_nisplus.so
+#  ln -sf libnss_nis.so.2 "$pkgdir"/usr/lib/libnss_nis.so
+#  ln -sf libresolv.so.2 "$pkgdir"/usr/lib/libresolv.so
+#  ln -sf librt.so.1 "$pkgdir"/usr/lib/librt.so
+#  ln -sf libutil.so.1 "$pkgdir"/usr/lib/libutil.so
+#
+#  # CHeck if mv didn't overwrite files
+#  if ls "$pkgdir"/usr/lib/*~ 1> /dev/null 2>&1; then
+#    echo "Files in /usr/lib were overwritten!"
+#    echo "Exiting."
+#    return 1
+#  fi
 
   # Add ld.so symlink because gcc has ld.so hardcoded for Hurd
   ln -s ld.so.1 "$pkgdir"/usr/lib/ld.so
