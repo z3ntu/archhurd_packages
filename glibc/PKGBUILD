@@ -28,7 +28,6 @@ sha256sums=('SKIP'
             'c0ae3348c7d53bfa02b67526a53a095ca835e98ca41723c138edff5e98ff04ef')
 
 prepare() {
-  rm -rf glibc-build
   mkdir -p glibc-build
   if [ ! -d "$srcdir"/glibc/libpthread ]; then
     cp -r "$srcdir"/libpthread "$srcdir"/glibc/
@@ -72,7 +71,7 @@ check() {
 
 package() {
   pkgdesc='GNU C Library'
-  depends=('linux-api-headers>=4.10' tzdata filesystem)
+  depends=(tzdata filesystem)
   optdepends=('gd: for memusagestat')
   install=glibc.install
   backup=(etc/gai.conf
