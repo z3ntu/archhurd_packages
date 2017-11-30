@@ -1,0 +1,28 @@
+# $Id$
+# Maintainer: Jan de Groot <jgc@archlinux.org>
+# Contributor: Chaiwat Suttipongsakul <cwt114@gmail.com>
+
+pkgname=libthai
+pkgver=0.1.27
+pkgrel=1
+pkgdesc="Thai language support routines"
+url="https://linux.thai.net/projects/libthai"
+arch=('x86_64')
+license=('LGPL')
+depends=('libdatrie')
+makedepends=('pkgconfig')
+options=('!emptydirs')
+source=(https://linux.thai.net/pub/thailinux/software/${pkgname}/${pkgname}-${pkgver}.tar.xz)
+md5sums=('2f851d6bc940080e1af1d38504d4f564')
+sha256sums=('1659fa1b7b1d6562102d7feb8c8c3fd94bb2dc5761ed7dbaae4f300e1c03eff6')
+
+build() {
+  cd ${pkgname}-${pkgver}
+  ./configure --prefix=/usr --disable-static
+  make
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make DESTDIR="${pkgdir}" install
+}
