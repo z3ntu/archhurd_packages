@@ -8,7 +8,8 @@ arch=(i686)
 url="http://www.gnu.org/software/hurd/hurd.html"
 license=('GPL')
 groups=('base')
-depends=('gnumach' 'glibc')  # initscripts
+# TODO: Make parted an optdepend (and makedepend probably)
+depends=('gnumach' 'glibc' 'parted')  # initscripts
 makedepends=('git' 'glibc')
 options=('!makeflags')
 backup=(etc/ttys)
@@ -38,8 +39,7 @@ build() {
   ../$pkgname/configure \
      --prefix=/usr \
      --disable-profile \
-     --enable-static-progs='iso9660fs,ext2fs,ufs' \
-     --without-parted
+     --enable-static-progs='iso9660fs,ext2fs,ufs'
   make
 }
 
