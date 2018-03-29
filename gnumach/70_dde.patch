@@ -1,0 +1,722 @@
+TODO: This needs to be cleaned to be pushed upstream. Notably, userland
+shouldn't be able to mask a kernel IRQ. Instead, device_intr_enable() should
+just disable/enable IRQ delivery to userland.
+
+This is the output of
+
+git diff master master-user_level_drivers
+
+diff --git a/Makefrag.am b/Makefrag.am
+index c16f1c72..0b4b7c51 100644
+--- a/Makefrag.am
++++ b/Makefrag.am
+@@ -308,6 +308,7 @@ libkernel_a_SOURCES += \
+ 	device/device_types_kernel.h \
+ 	device/ds_routines.c \
+ 	device/ds_routines.h \
++	device/intr.c \
+ 	device/if_ether.h \
+ 	device/if_hdr.h \
+ 	device/io_req.h \
+@@ -354,6 +355,8 @@ include_device_HEADERS = \
+ 	include/device/device_reply.defs \
+ 	include/device/device_request.defs \
+ 	include/device/device_types.defs \
++	include/device/intr.defs \
++	include/device/intr.h \
+ 	include/device/device_types.h \
+ 	include/device/disk_status.h \
+ 	include/device/net_status.h \
+diff --git a/device/ds_routines.c b/device/ds_routines.c
+index 1fabec3c..06fe4e96 100644
+--- a/device/ds_routines.c
++++ b/device/ds_routines.c
+@@ -318,6 +318,43 @@ ds_device_map (device_t dev, vm_prot_t prot, vm_offset_t offset,
+ 				offset, size, pager, unmap);
+ }
+ 
++io_return_t
++ds_device_intr_register (ipc_port_t master_port, int line,
++		       int id, int flags, ipc_port_t receive_port)
++{
++#ifdef MACH_XEN
++  return D_INVALID_OPERATION;
++#else	/* MACH_XEN */
++  extern int install_user_intr_handler (unsigned int line,
++					unsigned long flags,
++					ipc_port_t dest);
++  io_return_t ret;
++
++  /* Open must be called on the master device port.  */
++  if (master_port != master_device_port)
++    return D_INVALID_OPERATION;
++
++  /* XXX: move to arch-specific */
++  if (line < 0 || line >= 16)
++    return D_INVALID_OPERATION;
++
++  ret = insert_intr_entry (line, receive_port);
++  if (ret)
++    return ret;
++  // TODO The original port should be replaced
++  // when the same device driver calls it again, 
++  // in order to handle the case that the device driver crashes and restarts.
++  ret = install_user_intr_handler (line, flags, receive_port);
++
++  /* If the port is installed successfully, increase its reference by 1.
++   * Thus, the port won't be destroyed after its task is terminated. */
++  if (ret == 0)
++    ip_reference (receive_port);
++
++  return ret;
++#endif	/* MACH_XEN */
++}
++
+ boolean_t
+ ds_notify (mach_msg_header_t *msg)
+ {
+@@ -1798,6 +1835,24 @@ device_writev_trap (mach_device_t device, dev_mode_t mode,
+ 	return (result);
+ }
+ 
++kern_return_t
++ds_device_intr_enable(ipc_port_t master_port, int line, char status)
++{
++#ifdef MACH_XEN
++  return D_INVALID_OPERATION;
++#else	/* MACH_XEN */
++  if (master_port != master_device_port)
++    return D_INVALID_OPERATION;
++
++  if (status)
++    /* TODO: better name for generic-to-arch-specific call */
++    enable_irq (line);
++  else
++    disable_irq (line);
++  return 0;
++#endif	/* MACH_XEN */
++}
++
+ struct device_emulation_ops mach_device_emulation_ops =
+ {
+   (void*) mach_device_reference,
+diff --git a/device/ds_routines.h b/device/ds_routines.h
+index c0543cbc..e9f115fc 100644
+--- a/device/ds_routines.h
++++ b/device/ds_routines.h
+@@ -83,4 +83,7 @@ io_return_t ds_device_writev_trap(
+ 	io_buf_vec_t 	*iovec,
+ 	vm_size_t 	count);
+ 
++/* XXX arch-specific */
++extern ipc_port_t intr_rcv_ports[16];
++
+ #endif	/* DS_ROUTINES_H */
+diff --git a/device/intr.c b/device/intr.c
+new file mode 100644
+index 00000000..cf5d93f6
+--- /dev/null
++++ b/device/intr.c
+@@ -0,0 +1,200 @@
++#include <device/intr.h>
++#include <device/ds_routines.h>
++#include <kern/queue.h>
++#include <kern/printf.h>
++
++#ifndef MACH_XEN
++// TODO this is only for x86 system
++#define sti() __asm__ __volatile__ ("sti": : :"memory")
++#define cli() __asm__ __volatile__ ("cli": : :"memory")
++
++static boolean_t deliver_intr (int line, ipc_port_t dest_port);
++
++struct intr_entry
++{
++  queue_chain_t chain;
++  ipc_port_t dest;
++  int line;
++  /* The number of interrupts occur since last run of intr_thread. */
++  int interrupts;
++};
++
++static queue_head_t intr_queue;
++/* The total number of unprocessed interrupts. */
++static int tot_num_intr;
++
++static struct intr_entry *
++search_intr (int line, ipc_port_t dest)
++{
++  struct intr_entry *e;
++  queue_iterate (&intr_queue, e, struct intr_entry *, chain)
++    {
++      if (e->dest == dest && e->line == line)
++	return e;
++    }
++  return NULL;
++}
++
++/* This function can only be used in the interrupt handler. */
++void
++queue_intr (int line, ipc_port_t dest)
++{
++  extern void intr_thread ();
++  struct intr_entry *e;
++  
++  cli ();
++  e = search_intr (line, dest);
++  assert (e);
++  e->interrupts++;
++  tot_num_intr++;
++  sti ();
++
++  thread_wakeup ((event_t) &intr_thread);
++}
++
++/* insert an interrupt entry in the queue.
++ * This entry exists in the queue until
++ * the corresponding interrupt port is removed.*/
++int
++insert_intr_entry (int line, ipc_port_t dest)
++{
++  int err = 0;
++  struct intr_entry *e, *new;
++  int free = 0;
++
++  new = (struct intr_entry *) kalloc (sizeof (*new));
++  if (new == NULL)
++    return D_NO_MEMORY;
++
++  /* check whether the intr entry has been in the queue. */
++  cli ();
++  e = search_intr (line, dest);
++  if (e)
++    {
++      printf ("the interrupt entry for line %d and port %p has been inserted\n",
++	  line, dest);
++      free = 1;
++      err = D_ALREADY_OPEN;
++      goto out;
++    }
++  new->line = line;
++  new->dest = dest;
++  new->interrupts = 0;
++  queue_enter (&intr_queue, new, struct intr_entry *, chain);
++out:
++  sti ();
++  if (free)
++    kfree ((vm_offset_t) new, sizeof (*new));
++  return err;
++}
++
++/* this function should be called when line is disabled. */
++void mark_intr_removed (int line, ipc_port_t dest)
++{
++  struct intr_entry *e;
++
++  e = search_intr (line, dest);
++  if (e)
++    e->dest = NULL;
++}
++
++void
++intr_thread ()
++{
++  struct intr_entry *e;
++  int line;
++  ipc_port_t dest;
++  queue_init (&intr_queue);
++  
++  for (;;)
++    {
++      assert_wait ((event_t) &intr_thread, FALSE);
++      cli ();
++      while (tot_num_intr)
++	{
++	  int del = 0;
++
++	  queue_iterate (&intr_queue, e, struct intr_entry *, chain)
++	    {
++	      /* if an entry doesn't have dest port,
++	       * we should remove it. */
++	      if (e->dest == NULL)
++		{
++		  clear_wait (current_thread (), 0, 0);
++		  del = 1;
++		  break;
++		}
++
++	      if (e->interrupts)
++		{
++		  clear_wait (current_thread (), 0, 0);
++		  line = e->line;
++		  dest = e->dest;
++		  e->interrupts--;
++		  tot_num_intr--;
++
++		  sti ();
++		  deliver_intr (line, dest);
++		  cli ();
++		}
++	    }
++
++	  /* remove the entry without dest port from the queue and free it. */
++	  if (del)
++	    {
++	      assert (!queue_empty (&intr_queue));
++	      queue_remove (&intr_queue, e, struct intr_entry *, chain);
++	      sti ();
++	      kfree ((vm_offset_t) e, sizeof (*e));
++	      cli ();
++	    }
++	}
++      sti ();
++      thread_block (NULL);
++    }
++}
++
++static boolean_t
++deliver_intr (int line, ipc_port_t dest_port)
++{
++  ipc_kmsg_t kmsg;
++  mach_intr_notification_t *n;
++  mach_port_t dest = (mach_port_t) dest_port;
++
++  if (dest == MACH_PORT_NULL)
++    return FALSE;
++
++  kmsg = ikm_alloc(sizeof *n);
++  if (kmsg == IKM_NULL) 
++    return FALSE;
++
++  ikm_init(kmsg, sizeof *n);
++  n = (mach_intr_notification_t *) &kmsg->ikm_header;
++
++  mach_msg_header_t *m = &n->intr_header;
++  mach_msg_type_t *t = &n->intr_type;
++
++  m->msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_PORT_SEND, 0);
++  m->msgh_size = sizeof *n;
++  m->msgh_seqno = INTR_NOTIFY_MSGH_SEQNO;
++  m->msgh_local_port = MACH_PORT_NULL;
++  m->msgh_remote_port = MACH_PORT_NULL;
++  m->msgh_id = MACH_INTR_NOTIFY;
++
++  t->msgt_name = MACH_MSG_TYPE_INTEGER_32;
++  t->msgt_size = 32;
++  t->msgt_number = 1;
++  t->msgt_inline = TRUE;
++  t->msgt_longform = FALSE;
++  t->msgt_deallocate = FALSE;
++  t->msgt_unused = 0;
++
++  n->intr_header.msgh_remote_port = dest;
++  n->line = line;
++
++  ipc_port_copy_send (dest_port);
++  ipc_mqueue_send_always(kmsg);
++
++  return TRUE;
++}
++#endif	/* MACH_XEN */
+diff --git a/include/device/device.defs b/include/device/device.defs
+index 409146f5..dca1be4e 100644
+--- a/include/device/device.defs
++++ b/include/device/device.defs
+@@ -142,3 +142,23 @@ routine device_set_filter(
+ 	in	filter		: filter_array_t
+ 	);
+ 
++routine device_intr_register(
++		master_port	: mach_port_t;
++	in	line		: int;
++	in	id		: int;
++	in	flags		: int;
++	in	receive_port	: mach_port_send_t
++	);
++
++/*
++ *	enable/disable the specified line.
++ */
++/* XXX: Naming a function taht can disable something "xxx_enable" is confusing. */
++/* Is the disable part actually used at all? AIUI, the kernel IRQ handler
++should always disable the line; and the userspace driver only has to
++reenable it, after acknowledging and handling the interrupt...
++*/
++routine device_intr_enable(
++		master_port	: mach_port_t;
++		line		: int;
++		status		: char);
+diff --git a/include/device/intr.defs b/include/device/intr.defs
+new file mode 100644
+index 00000000..368b96c6
+--- /dev/null
++++ b/include/device/intr.defs
+@@ -0,0 +1,36 @@
++/* 
++ * Mach Operating System
++ * Copyright (c) 1991,1990,1989 Carnegie Mellon University
++ * All Rights Reserved.
++ * 
++ * Permission to use, copy, modify and distribute this software and its
++ * documentation is hereby granted, provided that both the copyright
++ * notice and this permission notice appear in all copies of the
++ * software, derivative works or modified versions, and any portions
++ * thereof, and that both notices appear in supporting documentation.
++ * 
++ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
++ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
++ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
++ * 
++ * Carnegie Mellon requests users of this software to return to
++ * 
++ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
++ *  School of Computer Science
++ *  Carnegie Mellon University
++ *  Pittsburgh PA 15213-3890
++ * 
++ * any improvements or extensions that they make and grant Carnegie Mellon
++ * the rights to redistribute these changes.
++ */
++
++subsystem notify 100;
++
++#include <mach/std_types.defs>
++
++serverprefix do_;
++serverdemux intr_notify_server;
++
++simpleroutine mach_intr_notify(
++		notify	: notify_port_t;
++		name	: int);
+diff --git a/include/mach/mach.defs b/include/mach/mach.defs
+index c6ad0770..77cc7d49 100644
+--- a/include/mach/mach.defs
++++ b/include/mach/mach.defs
+@@ -720,5 +720,38 @@ skip;	/* old host_fpa_counters_reset */
+ #endif	/* ! KERNEL_USER */
+ 
+ /*
++ *	This routine is created for allocating DMA buffers.
++ *	We are going to get a contiguous physical memory
++ *	and its physical address in addition to the virtual address.
++ */
++
++ /* XXX
++ This RPC lacks a few additional constraints like boundaries, alignment
++and maybe phase. We may not use them now, but they're important for
++portability (e.g. if GNU Mach supports PAE, drivers that can't use
++physical memory beyond the 4 GiB limit must be able to express it).
++
++> What do you mean by "phase"?
++
++Offset from the alignment. But I don't think it's useful at all in this
++case. Minimum and maximum addresses and alignment should do. Maybe
++boundary crossing but usually, specifying the right alignment and size
++is enough.
++
++For upstream
++inclusion, we need to do it properly: the RPC should return a special
++memory object (similar to device_map() ), which can then be mapped into
++the process address space with vm_map() like any other memory object.
++
++phys_address_t?
++ */
++routine vm_allocate_contiguous(
++		host_priv	: host_priv_t;
++		target_task	: vm_task_t;
++	out	vaddr		: vm_address_t;
++	out	paddr		: vm_address_t;
++		size		: vm_size_t);
++
++/*
+  *	There is no more room in this interface for additional calls.
+  */
+diff --git a/include/device/intr.h b/include/device/intr.h
+new file mode 100644
+index 00000000..3c0e1b8c
+--- /dev/null
++++ b/include/device/intr.h
+@@ -0,0 +1,17 @@
++#ifndef __INTR_H__
++
++#define __INTR_H__
++
++#include <device/device_types.h>
++
++typedef struct
++{
++  mach_msg_header_t intr_header;
++  mach_msg_type_t   intr_type;
++  int		    line;
++} mach_intr_notification_t;
++
++#define INTR_NOTIFY_MSGH_SEQNO 0
++#define MACH_INTR_NOTIFY 100
++
++#endif
+diff --git a/kern/startup.c b/kern/startup.c
+index 19bd7bf6..fa9571c1 100644
+--- a/kern/startup.c
++++ b/kern/startup.c
+@@ -79,6 +79,7 @@ boolean_t reboot_on_panic = TRUE;
+ 
+ /* XX */
+ extern char *kernel_cmdline;
++extern void	intr_thread();
+ 
+ /*
+  *	Running in virtual memory, on the interrupt stack.
+@@ -223,6 +224,9 @@ void start_kernel_threads(void)
+ 	(void) kernel_thread(kernel_task, reaper_thread, (char *) 0);
+ 	(void) kernel_thread(kernel_task, swapin_thread, (char *) 0);
+ 	(void) kernel_thread(kernel_task, sched_thread, (char *) 0);
++#ifndef MACH_XEN
++	(void) kernel_thread(kernel_task, intr_thread, (char *)0);
++#endif	/* MACH_XEN */
+ 
+ #if	NCPUS > 1
+ 	/*
+diff --git a/linux/dev/arch/i386/kernel/irq.c b/linux/dev/arch/i386/kernel/irq.c
+index 7753814b..b7dfa1a9 100644
+--- a/linux/dev/arch/i386/kernel/irq.c
++++ b/linux/dev/arch/i386/kernel/irq.c
+@@ -83,6 +83,7 @@ struct linux_action
+   void *dev_id;
+   struct linux_action *next;
+   unsigned long flags;
++  volatile ipc_port_t delivery_port;
+ };
+ 
+ static struct linux_action *irq_action[16] =
+@@ -102,6 +103,7 @@ linux_intr (int irq)
+ {
+   struct pt_regs regs;
+   struct linux_action *action = *(irq_action + irq);
++  struct linux_action **prev = &irq_action[irq];
+   unsigned long flags;
+ 
+   kstat.interrupts[irq]++;
+@@ -113,7 +115,37 @@ linux_intr (int irq)
+ 
+   while (action)
+     {
+-      action->handler (irq, action->dev_id, &regs);
++      // TODO I might need to check whether the interrupt belongs to
++      // the current device. But I don't do it for now.
++      if (action->delivery_port)
++	{
++	  /* The reference of the port was increased
++	   * when the port was installed.
++	   * If the reference is 1, it means the port should
++	   * have been destroyed and I destroy it now. */
++	  if (action->delivery_port
++	      && action->delivery_port->ip_references == 1)
++	    {
++	      mark_intr_removed (irq, action->delivery_port);
++	      ipc_port_release (action->delivery_port);
++	      *prev = action->next;
++	      printk ("irq handler %d: release a dead delivery port\n", irq);
++	      linux_kfree(action);
++	      action = *prev;
++	      continue;
++	    }
++	  else
++	    {
++	      /* We disable the irq here and it will be enabled
++	       * after the interrupt is handled by the user space driver. */
++	      disable_irq (irq);
++	      queue_intr (irq, action->delivery_port);
++	    }
++
++	}
++      else if (action->handler)
++	action->handler (irq, action->dev_id, &regs);
++      prev = &action->next;
+       action = action->next;
+     }
+ 
+@@ -233,6 +265,7 @@ setup_x86_irq (int irq, struct linux_action *new)
+ 	}
+       while (old);
+       shared = 1;
++      printk("store a new irq %d\n", irq);
+     }
+ 
+   save_flags (flags);
+@@ -250,6 +283,51 @@ setup_x86_irq (int irq, struct linux_action *new)
+   return 0;
+ }
+ 
++int
++install_user_intr_handler (unsigned int irq, unsigned long flags,
++			  ipc_port_t dest)
++{
++  struct linux_action *action;
++  struct linux_action *old;
++  int retval;
++
++  assert (irq < 16);
++
++  /* Test whether the irq handler has been set */
++  // TODO I need to protect the array when iterating it.
++  old = irq_action[irq];
++  while (old)
++    {
++      if (old->delivery_port == dest)
++	{
++	  printk ("The interrupt handler has been installed on line %d", irq);
++	  return linux_to_mach_error (-EAGAIN);
++	}
++      old = old->next;
++    }
++
++  /*
++   * Hmm... Should I use `kalloc()' ?
++   * By OKUJI Yoshinori.
++   */
++  action = (struct linux_action *)
++    linux_kmalloc (sizeof (struct linux_action), GFP_KERNEL);
++  if (action == NULL)
++    return linux_to_mach_error (-ENOMEM);
++  
++  action->handler = NULL;
++  action->next = NULL;
++  action->dev_id = NULL;
++  action->flags = flags;
++  action->delivery_port = dest;
++  
++  retval = setup_x86_irq (irq, action);
++  if (retval)
++    linux_kfree (action);
++  
++  return linux_to_mach_error (retval);
++}
++
+ /*
+  * Attach a handler to an IRQ.
+  */
+@@ -278,6 +356,7 @@ request_irq (unsigned int irq, void (*handler) (int, void *, struct pt_regs *),
+   action->next = NULL;
+   action->dev_id = dev_id;
+   action->flags = flags;
++  action->delivery_port = NULL;
+   
+   retval = setup_x86_irq (irq, action);
+   if (retval)
+diff --git a/vm/vm_user.c b/vm/vm_user.c
+index 6c1e3d6f..24c4c64b 100644
+--- a/vm/vm_user.c
++++ b/vm/vm_user.c
+@@ -479,3 +479,97 @@ kern_return_t vm_wire_all(const ipc_port_t port, vm_map_t map, vm_wire_t flags)
+ 
+ 	return vm_map_pageable_all(map, flags);
+ }
++
++kern_return_t vm_allocate_contiguous(host_priv, map, result_vaddr, result_paddr, size)
++	host_t			host_priv;
++	vm_map_t		map;
++	vm_address_t		*result_vaddr;
++	vm_address_t		*result_paddr;
++	vm_size_t		size;
++{
++	vm_size_t		alloc_size;
++	unsigned int		npages;
++	unsigned int		i;
++	unsigned int		order;
++	vm_page_t		pages;
++	vm_object_t		object;
++	kern_return_t		kr;
++	vm_address_t		vaddr;
++
++	if (host_priv == HOST_NULL)
++		return KERN_INVALID_HOST;
++
++	if (map == VM_MAP_NULL)
++		return KERN_INVALID_TASK;
++
++	size = vm_page_round(size);
++
++	if (size == 0)
++		return KERN_INVALID_ARGUMENT;
++
++	object = vm_object_allocate(size);
++
++	if (object == NULL)
++		return KERN_RESOURCE_SHORTAGE;
++
++	/*
++	 * XXX The page allocator returns blocks with a power-of-two size.
++	 * The requested size may not be a power-of-two, requiring some
++	 * work to release back the pages that aren't needed.
++	 */
++	order = vm_page_order(size);
++	alloc_size = (1 << (order + PAGE_SHIFT));
++	npages = vm_page_atop(alloc_size);
++
++	pages = vm_page_grab_contig(alloc_size, VM_PAGE_SEL_DIRECTMAP);
++
++	if (pages == NULL) {
++		vm_object_deallocate(object);
++		return KERN_RESOURCE_SHORTAGE;
++	}
++
++	vm_object_lock(object);
++	vm_page_lock_queues();
++
++	for (i = 0; i < vm_page_atop(size); i++) {
++		/*
++		 * XXX We can safely handle contiguous pages as an array,
++		 * but this relies on knowing the implementation of the
++		 * page allocator.
++		 */
++		pages[i].busy = FALSE;
++		vm_page_insert(&pages[i], object, vm_page_ptoa(i));
++		vm_page_wire(&pages[i]);
++	}
++
++	vm_page_unlock_queues();
++	vm_object_unlock(object);
++
++	for (i = vm_page_atop(size); i < npages; i++) {
++		vm_page_release(&pages[i], FALSE, FALSE);
++	}
++
++	vaddr = 0;
++	kr = vm_map_enter(map, &vaddr, size, 0, TRUE, object, 0, FALSE,
++			  VM_PROT_READ | VM_PROT_WRITE,
++			  VM_PROT_READ | VM_PROT_WRITE, VM_INHERIT_DEFAULT);
++
++	if (kr != KERN_SUCCESS) {
++		vm_object_deallocate(object);
++		return kr;
++	}
++
++	kr = vm_map_pageable(map, vaddr, vaddr + size,
++			     VM_PROT_READ | VM_PROT_WRITE,
++			     TRUE, TRUE);
++
++	if (kr != KERN_SUCCESS) {
++		vm_map_remove(map, vaddr, vaddr + size);
++		return kr;
++	}
++
++	*result_vaddr = vaddr;
++	*result_paddr = pages->phys_addr;
++
++	return KERN_SUCCESS;
++}
+diff --git a/linux/dev/drivers/block/genhd.c b/linux/dev/drivers/block/genhd.c
+index 3a861386..4a36f7ff 100644
+--- a/linux/dev/drivers/block/genhd.c
++++ b/linux/dev/drivers/block/genhd.c
+@@ -812,7 +812,9 @@ void device_setup(void)
+ #ifdef MACH
+ 	linux_intr_pri = SPL6;
+ #endif
+-	net_dev_init();
++	extern char *kernel_cmdline;
++	if (!strstr(kernel_cmdline, " nonetdev"))
++		net_dev_init();
+ #endif
+ #ifndef MACH
+ 	console_map_init();
