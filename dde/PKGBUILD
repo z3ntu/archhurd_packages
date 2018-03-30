@@ -47,8 +47,12 @@ build() {
     cp /usr/lib/libihash.so ./libihash/
     make version.h
 
+    # copy out headers as they get moved during the build or something - maybe put it into a seperate package beforehand
+    cp -r ./libdde_linux26/contrib/include/ ./libdde_linux26-headers
+#    cp -r ./libdde_linux26/build/include/linux-headers/* ./libdde_linux26-headers/
+
     make -C libddekit
-    CFLAGS="-I$PWD/libdde_linux26/contrib/include/ -I$PWD/libdde_linux26/build/include/linux-headers/" make -C libdde_linux26
+    CFLAGS="-I$PWD/libdde_linux26-headers -I$PWD/libdde_linux26/build/include/linux-headers" make -C libdde_linux26
     make -C libmachdev
     make -C eth-filter
 }
@@ -61,11 +65,13 @@ package() {
     # TODO: is there a fancy rule for that?
     cp -v libdde_linux26/Makeconf* "$pkgdir"/usr/share/libdde_linux26/
     cp -rv libdde_linux26/mk "$pkgdir"/usr/share/libdde_linux26/mk
+    mkdir "$pkgdir"/usr/lib/
     cp -v libdde_linux26/lib/src/*.a "$pkgdir"/usr/lib/
 
     make -C libmachdev prefix="$pkgdir/" install
     make -C eth-filter prefix="$pkgdir/" install
 
-    mv "$pkgdir"/lib "$pkgdir"/usr/lib
+    mv "$pkgdir"/lib/* "$pkgdir"/usr/lib/
+    rmdir "$pkgdir"/lib/
     mv "$pkgdir"/include "$pkgdir"/usr/include
 }
