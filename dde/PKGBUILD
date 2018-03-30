@@ -59,6 +59,7 @@ package() {
 
     make -C libdde_linux26 INSTALLDIR="$pkgdir/usr/share/libdde_linux26/build/include/" install
     # TODO: is there a fancy rule for that?
+    cp -v libdde_linux26/Makeconf* "$pkgdir"/usr/share/libdde_linux26/
     cp -rv libdde_linux26/mk "$pkgdir"/usr/share/libdde_linux26/mk
 
     make -C libmachdev prefix="$pkgdir/" install
