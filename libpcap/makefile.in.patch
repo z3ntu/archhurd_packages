@@ -1,0 +1,13 @@
+Something's weird here but this seems to work.
+
+--- a/Makefile.in	2018-03-30 14:19:42.000000000 +0000
++++ b/Makefile.in	2018-03-30 14:19:47.000000000 +0000
+@@ -371,7 +371,7 @@
+ 	@rm -f $@
+ 	VER=`cat $(srcdir)/VERSION`; \
+ 	MAJOR_VER=`sed 's/\([0-9][0-9]*\)\..*/\1/' $(srcdir)/VERSION`; \
+-	@V_SHLIB_CMD@ @V_SHLIB_OPT@ @V_SONAME_OPT@$@.$$MAJOR_VER $(LDFLAGS) \
++	@V_SHLIB_CMD@ @V_SHLIB_OPT@ @V_SONAME_OPT@ $(LDFLAGS) \
+ 	    -o $@.$$VER $(OBJ) $(ADDLOBJS) $(LIBS)
+ 
+ #
