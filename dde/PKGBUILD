@@ -61,6 +61,7 @@ package() {
     # TODO: is there a fancy rule for that?
     cp -v libdde_linux26/Makeconf* "$pkgdir"/usr/share/libdde_linux26/
     cp -rv libdde_linux26/mk "$pkgdir"/usr/share/libdde_linux26/mk
+    cp -v libdde_linux26/lib/src/*.a "$pkgdir"/usr/lib/
 
     make -C libmachdev prefix="$pkgdir/" install
     make -C eth-filter prefix="$pkgdir/" install
