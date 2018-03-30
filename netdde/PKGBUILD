@@ -1,0 +1,40 @@
+# This is an example PKGBUILD file. Use this as a start to creating your own,
+# and remove these comments. For more information, see 'man PKGBUILD'.
+# NOTE: Please fill out the license field for your package! If it is unknown,
+# then please put 'unknown'.
+
+# Maintainer: Your Name <youremail@domain.com>
+pkgname=netdde
+pkgver=r19.1678bdea3
+pkgrel=1
+pkgdesc="Linux 2.6 network drivers embedded in userland processes thanks to the DDE layer."
+arch=('i686')
+url="https://www.gnu.org/software/hurd/dde.html"
+license=('GPL')
+groups=()
+source=("git+https://git.savannah.gnu.org/git/hurd/incubator.git#branch=dde_net")
+sha512sums=('SKIP')
+
+pkgver() {
+    cd incubator
+    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+prepare() {
+    cd incubator
+}
+
+build() {
+    cd incubator
+
+    make convert
+    make
+}
+
+package() {
+    cd incubator
+
+    install -Dm755 netdde "$pkgdir"/hurd/netdde
+    mkdir -p "$pkgdir"/usr/share/doc/$pkgname
+    find dde -name "*.o" | sed -e 's|^dde/||' > "$pkgdir"/usr/share/doc/$pkgname/driver_list
+}
