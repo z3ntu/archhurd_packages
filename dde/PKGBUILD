@@ -48,7 +48,7 @@ build() {
     make version.h
 
     make -C libddekit
-    CFLAGS="-I$PWD/libdde_linux26/contrib/include/" make -C libdde_linux26
+    CFLAGS="-I$PWD/libdde_linux26/contrib/include/ -I$PWD/libdde_linux26/build/include/linux-headers/" make -C libdde_linux26
     make -C libmachdev
     make -C eth-filter
 }
@@ -56,11 +56,14 @@ build() {
 package() {
     cd incubator
     make -C libddekit prefix="$pkgdir/" install
-    make -C libdde_linux26 prefix="$pkgdir/" install
+
+    make -C libdde_linux26 INSTALLDIR="$pkgdir/usr/share/libdde_linux26/build/include/" install
+    # TODO: is there a fancy rule for that?
+    cp -rv libdde_linux26/mk "$pkgdir"/usr/share/libdde_linux26/mk
+
     make -C libmachdev prefix="$pkgdir/" install
     make -C eth-filter prefix="$pkgdir/" install
 
-    mkdir "$pkgdir"/usr
     mv "$pkgdir"/lib "$pkgdir"/usr/lib
     mv "$pkgdir"/include "$pkgdir"/usr/include
 }
