@@ -1,0 +1,66 @@
+# This is an example PKGBUILD file. Use this as a start to creating your own,
+# and remove these comments. For more information, see 'man PKGBUILD'.
+# NOTE: Please fill out the license field for your package! If it is unknown,
+# then please put 'unknown'.
+
+# Maintainer: Your Name <youremail@domain.com>
+pkgname=dde
+pkgver=r12407.c20479f1f
+pkgrel=1
+pkgdesc="A glue layer to embed Linux device drivers into another environement."
+arch=('i686')
+url="https://www.gnu.org/software/hurd/dde.html"
+license=('GPL')
+groups=()
+source=("git+https://git.savannah.gnu.org/git/hurd/incubator.git#branch=dde"
+	"libfshelp_uint32_t.patch")
+sha512sums=('SKIP'
+            '981ede0b4e236f12d5b13a741537df40ed71f66e0464d539e2133c61d69c7fc5ab110c8ce407f3e5f7a54dd4a44fa4c359d45af542eaf0580b16566039b45802')
+
+pkgver() {
+    cd incubator
+    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+prepare() {
+    cd incubator
+    patch -Np1 -i ../libfshelp_uint32_t.patch
+}
+
+build() {
+    cd incubator
+    autoreconf -vif
+    ./configure --prefix=/usr --disable-profile
+
+    # nasty hack because we don't build full hurd here
+    # Required by libddekit
+    cp /usr/lib/libports.so ./libports/
+    cp /usr/lib/libshouldbeinlibc.so ./libshouldbeinlibc/
+    cp /usr/lib/libhurd-slab.so ./libhurd-slab/
+    # Required by libmachdev
+    cp /usr/lib/libtrivfs.so ./libtrivfs/
+    cp /usr/lib/libbpf.so ./libbpf/
+    # Required by eth-filter
+    cp /usr/lib/libhurdbugaddr.a ./libhurdbugaddr/
+    cp /usr/lib/libhurdbugaddr.so ./libhurdbugaddr/
+    cp /usr/lib/libfshelp.so ./libfshelp/
+    cp /usr/lib/libihash.so ./libihash/
+    make version.h
+
+    make -C libddekit
+    CFLAGS="-I$PWD/libdde_linux26/contrib/include/" make -C libdde_linux26
+    make -C libmachdev
+    make -C eth-filter
+}
+
+package() {
+    cd incubator
+    make -C libddekit prefix="$pkgdir/" install
+    make -C libdde_linux26 prefix="$pkgdir/" install
+    make -C libmachdev prefix="$pkgdir/" install
+    make -C eth-filter prefix="$pkgdir/" install
+
+    mkdir "$pkgdir"/usr
+    mv "$pkgdir"/lib "$pkgdir"/usr/lib
+    mv "$pkgdir"/include "$pkgdir"/usr/include
+}

@@ -1,0 +1,22 @@
+diff --git a/libfshelp/service-fsys-startup.c b/libfshelp/service-fsys-startup.c
+index 3bcca84eb..9776f0958 100644
+--- a/libfshelp/service-fsys-startup.c
++++ b/libfshelp/service-fsys-startup.c
+@@ -24,6 +24,8 @@
+ #include <hurd.h>
+ #include <mach/notify.h>
+ #include "fshelp.h"
++#include <idn-int.h> // for uint32_t
++
+ 
+ 
+ /* The data passed in the various messages we're interested in.  */
+@@ -98,7 +100,7 @@ fshelp_service_fsys_startup (fshelp_open_fn_t underlying_open_fn,
+     {
+       union
+       {
+-	unsigned32_t word;
++	uint32_t word;
+ 	mach_msg_type_t type;
+       } t, c;
+       t.type = *type;
