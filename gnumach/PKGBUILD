@@ -24,6 +24,9 @@ prepare() {
   mkdir build
 
   cd $pkgname
+
+  patch -Np1 -i ../70_dde.patch
+
   autoreconf -fi
 }
 
