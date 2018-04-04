@@ -52,7 +52,7 @@ build() {
     --enable-rcp --enable-hostname --enable-dnsdomainname \
     --disable-rexec --disable-rexecd \
     --disable-tftp --disable-tftpd \
-    --disable-ping --disable-ping6 \
+    --enable-ping --enable-ping6 \
     --disable-logger --disable-syslogd \
     --disable-inetd --disable-whois \
     --disable-uucpd --disable-ifconfig --disable-traceroute
