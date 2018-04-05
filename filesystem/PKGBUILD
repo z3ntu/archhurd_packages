@@ -141,6 +141,10 @@ package() {
 	ln -s usr/bin "$pkgdir"/sbin
 	ln -s bin "$pkgdir"/usr/sbin
 	ln -s usr/include "$pkgdir"/include
+	ln -s usr/lib "$pkgdir"/libexec
+
+	mkdir -p "$pkgdir"/servers/socket
+	touch "$pkgdir"/servers/{exec,crash-kill,default-pager,password,socket,startup,proc,auth,symlink}
 
 	#
 	# install archlinux(7) manpage
