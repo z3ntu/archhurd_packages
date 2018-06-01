@@ -1,7 +1,9 @@
 # Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
 
 pkgname=gnumach
-pkgver=1.8.r46.gd593f4c0
+pkgver=1.8.r47.g926090c3
+# branch 'master' in hurd/gnumach.git
+_commit=926090c399ab503d6f7f67a9556d46b5094fd20f
 pkgrel=1
 pkgdesc="GNU Mach"
 arch=(i686)
@@ -9,7 +11,7 @@ url="http://www.gnu.org/software/hurd/microkernel/mach/gnumach.html"
 license=('GPL')
 groups=('base')
 makedepends=('git' 'mig' 'glibc')
-source=(git+https://git.savannah.gnu.org/git/hurd/gnumach.git
+source=(git+https://git.savannah.gnu.org/git/hurd/gnumach.git#commit=$_commit
 	https://salsa.debian.org/hurd-team/gnumach/raw/master/debian/patches/70_dde.patch)
 sha512sums=('SKIP'
             'f4451fa86cd9b9e275e4df9b8dba4225667ffee921e3664ea363bbb4fba0ce4dc1d73ac4aa2c46ffc49f88fd57ec6b5ad87d8468628d118b8124ca34211c3d9e')

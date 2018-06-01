@@ -1,7 +1,10 @@
 # Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
 
 pkgname=hurd
-pkgver=0.9.r106.g83fef6c8
+pkgver=0.9.r107.ga8fecd7b
+# branch 'master' in hurd/hurd.git
+#_commit=679b58fae96597d6a41f314dfcb93aae2da7d554
+_commit=a8fecd7be76342fea85b5129d450ab01738dcbdf
 pkgrel=1
 pkgdesc="The GNU Hurd"
 arch=(i686)
@@ -13,7 +16,7 @@ depends=('gnumach' 'glibc' 'parted')  # initscripts
 makedepends=('git' 'glibc')
 options=('!makeflags')
 backup=(etc/ttys)
-source=(git+https://git.savannah.gnu.org/git/hurd/hurd.git
+source=(git+https://git.savannah.gnu.org/git/hurd/hurd.git#commit=$_commit
         ttys)
 md5sums=('SKIP'
          '9d20e63e81835c76cc708ce6184f3530')

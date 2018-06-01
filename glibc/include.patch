@@ -1,0 +1,12 @@
+diff --git a/hurd/hurdsig.c b/hurd/hurdsig.c
+index 8584d5c631..86ee00a857 100644
+--- a/hurd/hurdsig.c
++++ b/hurd/hurdsig.c
+@@ -21,6 +21,7 @@
+ 
+ #include <cthreads.h>		/* For `struct mutex'.  */
+ #include <pthread.h>
++#include <pthreadP.h>
+ #include <mach.h>
+ #include <mach/thread_switch.h>
+ 

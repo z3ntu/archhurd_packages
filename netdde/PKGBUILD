@@ -6,13 +6,15 @@
 # Maintainer: Your Name <youremail@domain.com>
 pkgname=netdde
 pkgver=r19.1678bdea3
+# 'dde_net' in hurd/incubator.git
+_commit=1678bdea3c64826dd44cda16d3e20d0e62eda38a
 pkgrel=1
 pkgdesc="Linux 2.6 network drivers embedded in userland processes thanks to the DDE layer."
 arch=('i686')
 url="https://www.gnu.org/software/hurd/dde.html"
 license=('GPL')
 groups=()
-source=("git+https://git.savannah.gnu.org/git/hurd/incubator.git#branch=dde_net")
+source=("git+https://git.savannah.gnu.org/git/hurd/incubator.git#commit=$_commit")
 sha512sums=('SKIP')
 
 pkgver() {

@@ -1,0 +1,10 @@
+diff --git a/sysdeps/mach/hurd/Implies b/sysdeps/mach/hurd/Implies
+index d2d5234c1f..65e0490215 100644
+--- a/sysdeps/mach/hurd/Implies
++++ b/sysdeps/mach/hurd/Implies
+@@ -3,3 +3,5 @@
+ gnu
+ # The Hurd provides a rough superset of the functionality of 4.4 BSD.
+ unix/bsd
++# libpthread provides generic bits
++../libpthread/sysdeps/generic

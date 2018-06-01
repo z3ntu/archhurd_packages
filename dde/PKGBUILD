@@ -6,13 +6,15 @@
 # Maintainer: Your Name <youremail@domain.com>
 pkgname=dde
 pkgver=r12407.c20479f1f
+# branch 'dde' in hurd/incubator.git
+_commit=c20479f1f2df68382867218e4e1cf0a2b22a9168
 pkgrel=1
 pkgdesc="A glue layer to embed Linux device drivers into another environement."
 arch=('i686')
 url="https://www.gnu.org/software/hurd/dde.html"
 license=('GPL')
 groups=()
-source=("git+https://git.savannah.gnu.org/git/hurd/incubator.git#branch=dde"
+source=("git+https://git.savannah.gnu.org/git/hurd/incubator.git#commit=$_commit"
 	"libfshelp_uint32_t.patch")
 sha512sums=('SKIP'
             '981ede0b4e236f12d5b13a741537df40ed71f66e0464d539e2133c61d69c7fc5ab110c8ce407f3e5f7a54dd4a44fa4c359d45af542eaf0580b16566039b45802')

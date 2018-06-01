@@ -1,0 +1,48 @@
+# Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
+
+_pkgname=hurd
+pkgname=hurd-headers
+pkgver=0.9.r143.g679b58fa
+# branch 'master' in hurd/hurd.git
+_commit=679b58fae96597d6a41f314dfcb93aae2da7d554
+pkgrel=1
+pkgdesc="The GNU Hurd - headers"
+arch=(i686)
+url="http://www.gnu.org/software/hurd/hurd.html"
+license=('GPL')
+groups=('base')
+makedepends=('git')
+source=(git+https://git.savannah.gnu.org/git/hurd/hurd.git#commit=$_commit)
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$_pkgname"
+  git describe --long | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  mkdir -p build
+
+  cd $_pkgname
+  autoreconf -fi
+}
+
+build() {
+  cd "$srcdir/build"
+
+  # TODO: Remove this?
+  export LDFLAGS="$(echo $LDFLAGS | sed 's/-Wl,--as-needed//')"
+  
+  ../$_pkgname/configure \
+     --prefix=/usr \
+     --disable-profile \
+     --enable-static-progs='iso9660fs,ext2fs,ufs'
+#  make
+}
+
+package() {
+  cd "$srcdir/build"
+
+  make DESTDIR="$pkgdir/" install-headers
+}
+

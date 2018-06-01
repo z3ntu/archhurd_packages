@@ -2,7 +2,9 @@
 
 _name=gnumach
 pkgname=gnumach-headers
-pkgver=1.8.r40.gde813a9c
+pkgver=1.8.r47.g926090c3
+# branch 'master' in hurd/gnumach.git
+_commit=926090c399ab503d6f7f67a9556d46b5094fd20f
 pkgrel=1
 pkgdesc="GNU Mach - header files"
 arch=(i686)
@@ -11,7 +13,7 @@ license=('GPL')
 groups=('base-devel')
 depends=('glibc')
 makedepends=('git')
-source=(git+https://git.savannah.gnu.org/git/hurd/gnumach.git)
+source=(git+https://git.savannah.gnu.org/git/hurd/gnumach.git#commit=$_commit)
 sha512sums=('SKIP')
 
 pkgver() {
