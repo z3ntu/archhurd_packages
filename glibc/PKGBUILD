@@ -5,39 +5,25 @@
 # NOTE: valgrind requires rebuilt with each major glibc version
 
 pkgname=glibc
-pkgver=2.23.r35407.1c17efdfa1
+pkgver=2.27.9000.r33609.a650b05ebe
 # branch 'tschwinge/Roger_Whittaker' in hurd/glibc.git
-_commit=1c17efdfa175c23dc806e0d96f200aa5b3a83564
-#_commit=1d9e154ebefa4525484c3fab2e0941c3bd55e41b
-# branch 'master' in hurd/libpthread.git
-_libpthread_commit=514ec0784edd9a5624d71999ba4167bca818fac5
-#_libpthread_commit=8f03a364f803ad878ea3ab226fd2955ed4565495
+_commit=a650b05ebee8fb8d0df03396002e680b3a79918d
 pkgrel=1
 arch=(i686)
 url="http://www.gnu.org/software/libc"
 license=(GPL LGPL)
 makedepends=(git mig)
 options=(!strip staticlibs !emptydirs)
-source=(git+https://git.savannah.gnu.org/git/hurd/glibc.git#commit=$_commit
-        git+https://git.savannah.gnu.org/git/hurd/libpthread.git#commit=$_libpthread_commit
+source=(git+git://sourceware.org/git/glibc.git#commit=$_commit
         locale.gen.txt
         locale-gen
-	include.patch
-	typo.patch
-	libpthread_build.diff  # based on libpthread_build.diff in glibc-2.23 branch
         local-enable-ldconfig.diff  # patch based on local-enable-ldconfig.diff from Debian
-        local-clock_gettime_MONOTONIC.diff  # from Debian
-        Avoid-.symver-on-common-symbols-BZ-21666.patch)
+	local-clock_gettime_MONOTONIC.diff)  # from Debian
 sha256sums=('SKIP'
-            'SKIP'
             '748d0ccc57d302fcb1e626ce9398fa3a66830e1455cb0b0d31c6ffd7ac4d02bb'
             '83f108f915863c7ed0338e2d3e8f2e071a531a090ef8f8b2eb3a956a3c4f04d7'
-            '25a24276c22fc5dd0bccc5bf9de69a8b4ced8b64b62b7a77b48859c0a192d385'
-            '5a5501c8326546a31678c2820ebbfa22426474696b41162db167c760036957c7'
-            'a89039f7e591f634e1bf7e8d554583228833a83c245db1cff6ee33747805c16d'
-            '292d399060501e5cc0a18d32fcb8ae52df59b218ce3625344c20f05141bdb4ac'
-            '17f015eb50a0b70d865b6b5bd0f7ceb5762cc4e8d7392b2100c8ae9032980454'
-            'c0ae3348c7d53bfa02b67526a53a095ca835e98ca41723c138edff5e98ff04ef')
+            '6dce5ae782515a57a3f6fe5f4fde4554049d4c7d206f83725a3debcd8db22a9f'
+            '17f015eb50a0b70d865b6b5bd0f7ceb5762cc4e8d7392b2100c8ae9032980454')
 
 pkgver() {
   cd glibc
@@ -47,17 +33,10 @@ pkgver() {
 
 prepare() {
   mkdir -p glibc-build
-  if [ ! -d "$srcdir"/glibc/libpthread ]; then
-    cp -r "$srcdir"/libpthread "$srcdir"/glibc/
-  fi
 
   cd glibc
-  patch -Np1 -i "$srcdir"/include.patch
-  patch -Np1 -i "$srcdir"/typo.patch
-  patch -Np1 -i "$srcdir"/libpthread_build.diff
   patch -Np1 -i "$srcdir"/local-enable-ldconfig.diff
   patch -Np1 -i "$srcdir"/local-clock_gettime_MONOTONIC.diff
-  patch -Np1 -i "$srcdir"/Avoid-.symver-on-common-symbols-BZ-21666.patch
 }  
 
 build() {
