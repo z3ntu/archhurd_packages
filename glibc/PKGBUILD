@@ -17,11 +17,13 @@ options=(!strip staticlibs !emptydirs)
 source=(git+git://sourceware.org/git/glibc.git#commit=$_commit
         locale.gen.txt
         locale-gen
+	glibc_compatibility_symbols.patch
         local-enable-ldconfig.diff  # patch based on local-enable-ldconfig.diff from Debian
 	local-clock_gettime_MONOTONIC.diff)  # from Debian
 sha256sums=('SKIP'
             '748d0ccc57d302fcb1e626ce9398fa3a66830e1455cb0b0d31c6ffd7ac4d02bb'
             '83f108f915863c7ed0338e2d3e8f2e071a531a090ef8f8b2eb3a956a3c4f04d7'
+            '6be8c1f6b24ac7c8714baf972caf4c261fb848ca5feaf40da87eed33a9be9e86'
             '6dce5ae782515a57a3f6fe5f4fde4554049d4c7d206f83725a3debcd8db22a9f'
             '17f015eb50a0b70d865b6b5bd0f7ceb5762cc4e8d7392b2100c8ae9032980454')
 
@@ -35,6 +37,7 @@ prepare() {
   mkdir -p glibc-build
 
   cd glibc
+  patch -Np1 -i "$srcdir"/glibc_compatibility_symbols.patch
   patch -Np1 -i "$srcdir"/local-enable-ldconfig.diff
   patch -Np1 -i "$srcdir"/local-clock_gettime_MONOTONIC.diff
 }  

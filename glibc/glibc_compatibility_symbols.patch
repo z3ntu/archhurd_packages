@@ -1,0 +1,16 @@
+diff --git a/htl/Versions b/htl/Versions
+index 6a63a1b8a1..6b6bb77f03 100644
+--- a/htl/Versions
++++ b/htl/Versions
+@@ -1,4 +1,11 @@
+ libc {
++  GLIBC_2.13 {
++    pthread_mutex_lock;
++    pthread_mutex_unlock;
++    pthread_mutex_init;
++    pthread_mutex_destroy;
++    pthread_cond_broadcast;
++  }
+   GLIBC_2.21 {
+     pthread_attr_destroy; pthread_attr_getdetachstate;
+     pthread_attr_getinheritsched; pthread_attr_getschedparam;
