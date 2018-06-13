@@ -243,9 +243,4 @@ package() {
 
   find $pkgdir -name perllocal.pod -delete
   find $pkgdir -name .packlist -delete
-
-  # Fix weird packaging issue dumping over 500 files into the root directory.
-  # LD_LIBRARY_PATH=/home/luca/archhurd_packages_newnew/perl/src/perl-5.26.1  ./perl -Ilib -I. installman --destdir=/home/luca/archhurd_packages_newnew/perl/pkg/perl
-  # As they all have a .0 file extension, they can easily be removed.
-  rm "$pkgdir"/*.0
 }
