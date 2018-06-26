@@ -1,0 +1,26 @@
+From 22f156fb7dd3b1c0a9bdb3231b687e00d493c19d Mon Sep 17 00:00:00 2001
+From: Luca Weiss <luca@z3ntu.xyz>
+Date: Tue, 26 Jun 2018 13:18:42 +0200
+Subject: [PATCH 3/4] Hurd: use $FAKED_MODE instead of $FAKEROOTKEY for
+ fakeroot detection
+
+---
+ scripts/makepkg.sh.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scripts/makepkg.sh.in b/scripts/makepkg.sh.in
+index 32423262..dc3636ae 100644
+--- a/scripts/makepkg.sh.in
++++ b/scripts/makepkg.sh.in
+@@ -1406,7 +1406,7 @@ catastrophic damage to your system.")" "makepkg"
+ 		exit $E_ROOT
+ 	fi
+ else
+-	if [[ -z $FAKEROOTKEY ]]; then
++	if [[ -z $FAKED_MODE ]]; then
+ 		error "$(gettext "Do not use the %s option. This option is only for internal use by %s.")" "'-F'" "makepkg"
+ 		exit $E_INVALID_OPTION
+ 	fi
+-- 
+2.18.0
+

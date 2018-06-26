@@ -1,0 +1,26 @@
+From a84f2a4be91bc52613f83ce62ed3fd99044df3d9 Mon Sep 17 00:00:00 2001
+From: Luca Weiss <luca@z3ntu.xyz>
+Date: Tue, 26 Jun 2018 13:17:17 +0200
+Subject: [PATCH 2/4] Hurd: define PIPE_BUF
+
+---
+ lib/libalpm/util.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib/libalpm/util.c b/lib/libalpm/util.c
+index a06f5bfd..d2e6b5cd 100644
+--- a/lib/libalpm/util.c
++++ b/lib/libalpm/util.c
+@@ -640,6 +640,9 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
+ 	} else {
+ 		/* this code runs for the parent only (wait on the child) */
+ 		int status;
++#if (!defined(PIPE_BUF) && defined(_POSIX_PIPE_BUF))
++#define PIPE_BUF 8*_POSIX_PIPE_BUF
++#endif
+ 		char obuf[PIPE_BUF]; /* writes <= PIPE_BUF are guaranteed atomic */
+ 		char ibuf[LINE_MAX];
+ 		ssize_t olen = 0, ilen = 0;
+-- 
+2.18.0
+

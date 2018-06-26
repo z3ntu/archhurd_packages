@@ -1,0 +1,25 @@
+From efba21c6d13158620d35135d29450c94e2c3cf13 Mon Sep 17 00:00:00 2001
+From: Luca Weiss <luca@z3ntu.xyz>
+Date: Tue, 26 Jun 2018 13:16:49 +0200
+Subject: [PATCH 1/4] Hurd: define PATH_MAX
+
+---
+ lib/libalpm/alpm.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/libalpm/alpm.h b/lib/libalpm/alpm.h
+index 57226ebd..f3fdb704 100644
+--- a/lib/libalpm/alpm.h
++++ b/lib/libalpm/alpm.h
+@@ -37,6 +37,8 @@ extern "C" {
+ 
+ #include <alpm_list.h>
+ 
++#define PATH_MAX	4096
++
+ /*
+  * Arch Linux Package Management library
+  */
+-- 
+2.18.0
+

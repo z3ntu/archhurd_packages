@@ -4,61 +4,62 @@
 # Maintainer: Dave Reisner <dreisner@archlinux.org>
 
 pkgname=pacman
-pkgver=5.0.2
+pkgver=5.1.0
 pkgrel=2
 pkgdesc="A library-based package manager with dependency support"
-arch=('i686' 'x86_64')
+arch=('x86_64')
 url="http://www.archlinux.org/pacman/"
 license=('GPL')
 groups=('base' 'base-devel')
 depends=('bash' 'glibc' 'libarchive' 'curl'
          'gpgme' 'pacman-mirrorlist' 'archhurd-keyring')
 makedepends=('asciidoc')
-checkdepends=('python2')
-provides=('pacman-contrib')
-conflicts=('pacman-contrib')
-replaces=('pacman-contrib')
+checkdepends=('python2') # 'fakechroot'
+optdpepends=('perl-locale-gettext: translation support in makepkg-template')
 backup=(etc/pacman.conf etc/makepkg.conf)
 options=('strip' 'debug')
 validpgpkeys=('6645B0A8C7005E78DB1D7864F99FFE0FEAE999BD'  # Allan McRae <allan@archlinux.org>
               'B8151B117037781095514CA7BBDFFC92306B1121') # Andrew Gregory (pacman) <andrew@archlinux.org>
 source=(https://sources.archlinux.org/other/pacman/$pkgname-$pkgver.tar.gz{,.sig}
+        0001-Hurd-define-PATH_MAX.patch
+        0002-Hurd-define-PIPE_BUF.patch
+        0003-Hurd-use-FAKED_MODE-instead-of-FAKEROOTKEY-for-faker.patch
+        0004-Hurd-use-V-for-fakeroot-version-output.patch
+        0001-makepkg-Clear-ERR-trap-before-trying-to-restore-it.patch
+        0002-makepkg-Don-t-use-parameterless-return.patch
         pacman.conf
-        makepkg.conf
-        pacman_hurd.patch
-        pacman_hurd_fakeroot.patch
-        pacman_pipe_buf.patch
-        pkginfo.patch)
-sha256sums=('dfd36086ad68564bcd977f4a1fafe51dd328acd4a95093ac4bf1249be9c41f0e'
+        makepkg.conf)
+sha256sums=('9f5993fc8923530713742f15df284677f297b3eca15ed7a24758c98ac7399bd3'
             'SKIP'
+            'f4dcef05656da28264053206bf169beb82b765124c038852ae86e73b0d68a851'
+            '05a042c370c86359a36c52c195664e35c3eed24d19efbcee782d1078e9348c9e'
+            '4bc3b9eefa00fdb29b57abec022582d98ad3653c4542d5870cb4c041e48722bd'
+            '06c1559616762d631964c4e347bf7a07a16b458824233c21ece41200e0eb12ec'
+            '9b2304141582a421e812c76760a74f360a3cbd780472cbb60cf023a34d6fcb3d'
+            '2a31d4db5f6e19e0148d4892de14317514f2b2dfb5369c7972a641ca8be89e5a'
             'a1c324e32bcd637a36cd62e8b63f64c377c7eaba49f8d139b2a3e472d5dab1b1'
-            '79b331284687b1241276dd826c772005bee13fab62b8b59404c33c6fed4ef3a9'
-            '61fb30e39e0ce17e198f69f55488bf25473136858e696b6bc9ab5dc2b5fd4801'
-            '794f420969e4f1278f3ae09b1a142452a425f765f86ea0b164101fd53a6b9660'
-            '0640596c5a29665a4ad46797e5b268545f2b7a70145a3bdd270e9bae7fcfb2bc'
-            '747d2782af09894a4a8d1de465a09cf299d2411e39233c92cd59863f6a7c7820')
+            '2646d9defd2f3cbb0136d2b58ff855312eb63d49bdc8950acc5f54fc559b4a1c')
 
 prepare() {
   cd "$pkgname-$pkgver"
-
-  patch -Np2 < "$srcdir"/pacman_hurd.patch
-  patch -Np2 < "$srcdir"/pacman_pipe_buf.patch
-  patch -Np1 < "$srcdir"/pacman_hurd_fakeroot.patch
-  patch -Np1 < "$srcdir"/pkginfo.patch
+  # Hurd-specific patches
+  patch -Np1 -i ../0001-Hurd-define-PATH_MAX.patch
+  patch -Np1 -i ../0002-Hurd-define-PIPE_BUF.patch
+  patch -Np1 -i ../0003-Hurd-use-FAKED_MODE-instead-of-FAKEROOTKEY-for-faker.patch
+  patch -Np1 -i ../0004-Hurd-use-V-for-fakeroot-version-output.patch
+  # Fix install_packages failure exit code, required by makechrootpkg
+  patch -Np1 -i ../0001-makepkg-Clear-ERR-trap-before-trying-to-restore-it.patch
+  patch -Np1 -i ../0002-makepkg-Don-t-use-parameterless-return.patch
 }
 
 build() {
   cd "$pkgname-$pkgver"
-
-  #as-needed causes a segfault (idk if this is still valid... - 2017-11-12)
-  export LDFLAGS=""
 
   ./configure --prefix=/usr --sysconfdir=/etc \
     --localstatedir=/var --enable-doc \
     --with-scriptlet-shell=/usr/bin/bash \
     --with-ldconfig=/usr/bin/ldconfig
   make V=1
-  make -C contrib
 }
 
 check() {
@@ -67,20 +68,13 @@ check() {
 
 package() {
   cd "$pkgname-$pkgver"
- 
+
   make DESTDIR="$pkgdir" install
-  make DESTDIR="$pkgdir" -C contrib install
 
   # install Arch specific stuff
   install -dm755 "$pkgdir/etc"
-  install -m644 "$srcdir/pacman.conf" "$pkgdir/etc/pacman.conf"
-
-  # set things correctly in the default conf file
+  install -m644 "$srcdir/pacman.conf" "$pkgdir/etc"
   install -m644 "$srcdir/makepkg.conf" "$pkgdir/etc"
-  sed -i "$pkgdir/etc/makepkg.conf" \
-    -e "s|@CARCH[@]|i686|g" \
-    -e "s|@CHOST[@]|i686-pc-gnu|g" \
-    -e "s|@CARCHFLAGS[@]|-march=i686|g"
 
   # put bash_completion in the right location
   install -dm755 "$pkgdir/usr/share/bash-completion/completions"
@@ -90,6 +84,4 @@ package() {
   for f in makepkg pacman-key; do
     ln -s pacman "$pkgdir/usr/share/bash-completion/completions/$f"
   done
-
-  install -Dm644 contrib/PKGBUILD.vim "$pkgdir/usr/share/vim/vimfiles/syntax/PKGBUILD.vim"
 }
