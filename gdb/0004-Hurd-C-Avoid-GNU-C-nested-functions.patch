@@ -1,0 +1,59 @@
+From a9617a426d001a748168fbc399fcc77e6d8d3cac Mon Sep 17 00:00:00 2001
+From: Thomas Schwinge <thomas@codesourcery.com>
+Date: Fri, 25 Nov 2016 14:56:01 +0100
+Subject: [PATCH 04/65] Hurd, C++: Avoid GNU C nested functions
+
+..., which C++ doesn't allow, so...
+
+	gdb/
+	* gnu-nat.c (gnu_create_inferior): Move nested "trace_me"
+	function...
+	(gnu_ptrace_me): ... here.
+---
+ gdb/ChangeLog |  4 ++++
+ gdb/gnu-nat.c | 20 +++++++++++---------
+ 2 files changed, 15 insertions(+), 9 deletions(-)
+
+diff --git a/gdb/gnu-nat.c b/gdb/gnu-nat.c
+index 92b9292428..34fd6f1ced 100644
+--- a/gdb/gnu-nat.c
++++ b/gdb/gnu-nat.c
+@@ -2110,6 +2110,16 @@ cur_inf (void)
+ }
+ 
+ static void
++gnu_ptrace_me (void)
++{
++  /* We're in the child; make this process stop as soon as it execs.  */
++  struct inf *inf = cur_inf ();
++  inf_debug (inf, "tracing self");
++  if (ptrace (PTRACE_TRACEME) != 0)
++    error (_("ptrace (PTRACE_TRACEME) failed!"));
++}
++
++static void
+ gnu_create_inferior (struct target_ops *ops, 
+ 		     char *exec_file, char *allargs, char **env,
+ 		     int from_tty)
+@@ -2117,17 +2127,9 @@ gnu_create_inferior (struct target_ops *ops,
+   struct inf *inf = cur_inf ();
+   int pid;
+ 
+-  void trace_me (void)
+-  {
+-    /* We're in the child; make this process stop as soon as it execs.  */
+-    inf_debug (inf, "tracing self");
+-    if (ptrace (PTRACE_TRACEME) != 0)
+-      error (_("ptrace (PTRACE_TRACEME) failed!"));
+-  }
+-
+   inf_debug (inf, "creating inferior");
+ 
+-  pid = fork_inferior (exec_file, allargs, env, trace_me,
++  pid = fork_inferior (exec_file, allargs, env, gnu_ptrace_me,
+                        NULL, NULL, NULL, NULL);
+ 
+   /* Attach to the now stopped child, which is actually a shell...  */
+-- 
+2.11.0
+

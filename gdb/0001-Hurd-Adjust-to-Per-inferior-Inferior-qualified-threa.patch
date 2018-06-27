@@ -1,0 +1,39 @@
+From 14f6890677849172a4b13779acd9089c9baa3a81 Mon Sep 17 00:00:00 2001
+From: Thomas Schwinge <thomas@codesourcery.com>
+Date: Tue, 24 May 2016 19:36:57 +0200
+Subject: [PATCH 01/65] Hurd: Adjust to "Per-inferior/Inferior-qualified thread
+ IDs" changes
+
+    [...]/gdb/gnu-nat.c: In function 'set_sig_thread_cmd':
+    [...]/gdb/gnu-nat.c:2973:7: warning: implicit declaration of function 'thread_id_to_pid' [-Wimplicit-function-declaration]
+           ptid_t ptid = thread_id_to_pid (atoi (args));
+           ^
+    [...]/gdb/gnu-nat.c:2973:7: error: invalid initializer
+
+That's commit 5d5658a1d3c3eb2a09c03f2f0662a1c01963c869, which renamed
+`thread_id_to_pid` to `global_thread_id_to_ptid`.
+
+	gdb/
+	* gnu-nat.c (set_sig_thread_cmd): Call global_thread_id_to_ptid
+	instead of thread_id_to_pid.
+---
+ gdb/ChangeLog | 5 +++++
+ gdb/gnu-nat.c | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/gdb/gnu-nat.c b/gdb/gnu-nat.c
+index 927ee5c6f1..92b9292428 100644
+--- a/gdb/gnu-nat.c
++++ b/gdb/gnu-nat.c
+@@ -2964,7 +2964,7 @@ set_sig_thread_cmd (char *args, int from_tty)
+     inf->signal_thread = 0;
+   else
+     {
+-      ptid_t ptid = thread_id_to_pid (atoi (args));
++      ptid_t ptid = global_thread_id_to_ptid (atoi (args));
+ 
+       if (ptid_equal (ptid, minus_one_ptid))
+ 	error (_("Thread ID %s not known.  "
+-- 
+2.11.0
+

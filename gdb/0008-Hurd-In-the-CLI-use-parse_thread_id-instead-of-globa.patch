@@ -1,0 +1,57 @@
+From c3187fa5cc72734e6fc766a85d657018c0516bad Mon Sep 17 00:00:00 2001
+From: Simon Marchi <simon.marchi@ericsson.com>
+Date: Thu, 8 Dec 2016 09:45:59 +0100
+Subject: [PATCH 08/65] Hurd: In the CLI, use parse_thread_id instead of
+ global_thread_id_to_ptid
+
+Follow-up to commit 14f6890677849172a4b13779acd9089c9baa3a81.
+global_thread_id_to_ptid expects global thread numbers, which are nowadays only
+used in MI, never presented to the user in the CLI.  Since this is a CLI
+command, it should accept the inferior-qualified format instead.
+
+	gdb/
+	* gnu-nat.c (set_sig_thread_cmd): Use parse_thread_id instead of
+	global_thread_id_to_ptid.
+---
+ gdb/ChangeLog |  6 ++++++
+ gdb/gnu-nat.c | 12 ++++--------
+ 2 files changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/gdb/gnu-nat.c b/gdb/gnu-nat.c
+index 5fd59a26fd..124574e8ed 100644
+--- a/gdb/gnu-nat.c
++++ b/gdb/gnu-nat.c
+@@ -63,6 +63,7 @@ extern "C"
+ #include "gdbcore.h"
+ #include "gdbthread.h"
+ #include "gdb_obstack.h"
++#include "tid-parse.h"
+ 
+ #include "gnu-nat.h"
+ #include "inf-child.h"
+@@ -2975,19 +2976,14 @@ set_sig_thread_cmd (char *args, int from_tty)
+ 
+   if (!args || (!isdigit (*args) && strcmp (args, "none") != 0))
+     error (_("Illegal argument to \"set signal-thread\" command.\n"
+-	   "Should be an integer thread ID, or `none'."));
++	     "Should be a thread ID, or \"none\"."));
+ 
+   if (strcmp (args, "none") == 0)
+     inf->signal_thread = 0;
+   else
+     {
+-      ptid_t ptid = global_thread_id_to_ptid (atoi (args));
+-
+-      if (ptid_equal (ptid, minus_one_ptid))
+-	error (_("Thread ID %s not known.  "
+-		 "Use the \"info threads\" command to\n"
+-	       "see the IDs of currently known threads."), args);
+-      inf->signal_thread = inf_tid_to_thread (inf, ptid_get_lwp (ptid));
++      struct thread_info *tp = parse_thread_id (args, NULL);
++      inf->signal_thread = inf_tid_to_thread (inf, ptid_get_lwp (tp->ptid));
+     }
+ }
+ 
+-- 
+2.11.0
+

@@ -1,0 +1,44 @@
+From 53488a6e194af11c2528e5e284facb8a6171b695 Mon Sep 17 00:00:00 2001
+From: Thomas Schwinge <thomas@codesourcery.com>
+Date: Thu, 8 Dec 2016 18:42:03 +0100
+Subject: [PATCH 21/65] Avoid PATH_MAX usage
+
+On GNU/Hurd, there is no "#define PATH_MAX", so this failed to build.
+
+	gdb/
+	* inferior.c (print_selected_inferior): Avoid PATH_MAX usage.
+---
+ gdb/ChangeLog  |  4 ++++
+ gdb/inferior.c | 15 +++++----------
+ 2 files changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/gdb/inferior.c b/gdb/inferior.c
+index 9fcdbd3b83..af6f3af3f7 100644
+--- a/gdb/inferior.c
++++ b/gdb/inferior.c
+@@ -556,17 +556,12 @@ inferior_pid_to_str (int pid)
+ void
+ print_selected_inferior (struct ui_out *uiout)
+ {
+-  char buf[PATH_MAX + 256];
+   struct inferior *inf = current_inferior ();
+-
+-  xsnprintf (buf, sizeof (buf),
+-	     _("[Switching to inferior %d [%s] (%s)]\n"),
+-	     inf->num,
+-	     inferior_pid_to_str (inf->pid),
+-	     (inf->pspace->pspace_exec_filename != NULL
+-	      ? inf->pspace->pspace_exec_filename
+-	      : _("<noexec>")));
+-  ui_out_text (uiout, buf);
++  const char *filename = inf->pspace->pspace_exec_filename;
++  if (filename == NULL)
++    filename = _("<noexec>");
++  ui_out_message (uiout, _("[Switching to inferior %d [%s] (%s)]\n"),
++		  inf->num, inferior_pid_to_str (inf->pid), filename);
+ }
+ 
+ /* Prints the list of inferiors and their details on UIOUT.  This is a
+-- 
+2.11.0
+

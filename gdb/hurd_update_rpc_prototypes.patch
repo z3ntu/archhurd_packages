@@ -1,0 +1,70 @@
+From gdb-patches-return-141215-listarch-gdb-patches=sources dot redhat dot com at sourceware dot org Sun Aug 27 18:41:07 2017
+Return-Path: <gdb-patches-return-141215-listarch-gdb-patches=sources dot redhat dot com at sourceware dot org>
+Delivered-To: listarch-gdb-patches at sources dot redhat dot com
+Received: (qmail 89692 invoked by alias); 27 Aug 2017 18:41:07 -0000
+Mailing-List: contact gdb-patches-help at sourceware dot org; run by ezmlm
+Precedence: bulk
+List-Id: <gdb-patches.sourceware.org>
+List-Subscribe: <mailto:gdb-patches-subscribe at sourceware dot org>
+List-Archive: <http://sourceware.org/ml/gdb-patches/>
+List-Post: <mailto:gdb-patches at sourceware dot org>
+List-Help: <mailto:gdb-patches-help at sourceware dot org>, <http://sourceware dot org/ml/#faqs>
+Sender: gdb-patches-owner at sourceware dot org
+Delivered-To: mailing list gdb-patches at sourceware dot org
+Received: (qmail 89198 invoked by uid 89); 27 Aug 2017 18:41:06 -0000
+Authentication-Results: sourceware.org; auth=none
+X-Virus-Found: No
+X-Spam-SWARE-Status: No, score=-26.1 required=5.0 tests=BAYES_00,GIT_PATCH_0,GIT_PATCH_1,GIT_PATCH_2,GIT_PATCH_3,SPF_HELO_PASS,SPF_NEUTRAL autolearn=ham version=3.3.2 spammy=rights
+X-HELO: hera.aquilenet.fr
+Received: from hera.aquilenet.fr (HELO hera.aquilenet.fr) (141.255.128.1) by sourceware.org (qpsmtpd/0.93/v0.84-503-g423c35a) with ESMTP; Sun, 27 Aug 2017 18:41:05 +0000
+Received: from localhost (localhost [127.0.0.1])	by hera.aquilenet.fr (Postfix) with ESMTP id EAE7DDB97;	Sun, 27 Aug 2017 20:41:03 +0200 (CEST)
+Received: from hera.aquilenet.fr ([127.0.0.1])	by localhost (hera.aquilenet.fr [127.0.0.1]) (amavisd-new, port 10024)	with ESMTP id OGMcfEKPyxK2; Sun, 27 Aug 2017 20:41:03 +0200 (CEST)
+Received: from var.youpi.perso.aquilenet.fr (unknown [IPv6:2a01:cb19:181:c200:3602:86ff:fe2c:6a19])	by hera.aquilenet.fr (Postfix) with ESMTPSA id 58814D75E;	Sun, 27 Aug 2017 20:41:03 +0200 (CEST)
+Received: from samy by var.youpi.perso.aquilenet.fr with local (Exim 4.89)	(envelope-from <samuel.thibault@ens-lyon.org>)	id 1dm2UY-0003kd-Bt; Sun, 27 Aug 2017 20:41:02 +0200
+Date: Sun, 27 Aug 2017 20:41:02 +0200
+From: Samuel Thibault <samuel dot thibault at gnu dot org>
+To: gdb-patches at sourceware dot org
+Cc: Thomas Schwinge <thomas at codesourcery dot com>
+Subject: hurd: update RPC prototypes
+Message-ID: <20170827184102.fddwriwehw6kwpv7@var.youpi.perso.aquilenet.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: NeoMutt/20170113 (1.7.2)
+
+Since hurd's baf7e5c ('hurd: Use polymorphic port types to return some
+rights.'), some RPCs prototypes have changed, gdb needs the
+corresponding update.
+
+* gdb/gnu-nat.c (S_proc_getmsgport_reply, S_proc_task2proc_reply,
+S_proc_pid2proc_reply): Add `mach_msg_type_name_t type' parameter.
+
+diff --git a/gdb/gnu-nat.c b/gdb/gnu-nat.c
+index d5e3841e68..402027866b 100644
+--- a/gdb/gnu-nat.c
++++ b/gdb/gnu-nat.c
+@@ -1874,17 +1876,19 @@ ILL_RPC (S_proc_setmsgport_reply,
+ 	 mach_port_t oldmsgport)
+ ILL_RPC (S_proc_getmsgport_reply,
+ 	 mach_port_t reply_port, kern_return_t return_code,
+-	 mach_port_t msgports)
++	 mach_port_t msgports, mach_msg_type_name_t type)
+ ILL_RPC (S_proc_pid2task_reply,
+ 	 mach_port_t reply_port, kern_return_t return_code, mach_port_t task)
+ ILL_RPC (S_proc_task2pid_reply,
+ 	 mach_port_t reply_port, kern_return_t return_code, pid_t pid)
+ ILL_RPC (S_proc_task2proc_reply,
+-	 mach_port_t reply_port, kern_return_t return_code, mach_port_t proc)
++	 mach_port_t reply_port, kern_return_t return_code,
++	 mach_port_t proc, mach_msg_type_name_t type)
+ ILL_RPC (S_proc_proc2task_reply,
+ 	 mach_port_t reply_port, kern_return_t return_code, mach_port_t task)
+ ILL_RPC (S_proc_pid2proc_reply,
+-	 mach_port_t reply_port, kern_return_t return_code, mach_port_t proc)
++	 mach_port_t reply_port, kern_return_t return_code,
++	 mach_port_t proc, mach_msg_type_name_t type)
+ ILL_RPC (S_proc_getprocinfo_reply,
+ 	 mach_port_t reply_port, kern_return_t return_code,
+ 	 int flags, procinfo_t procinfo, mach_msg_type_number_t procinfoCnt,
+
+

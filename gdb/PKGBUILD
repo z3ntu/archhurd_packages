@@ -1,0 +1,109 @@
+# $Id$
+# Maintainer: Allan McRae <allan@archlinux.org>
+# Contributor: Jan de Groot <jgc@archlinux.org>
+
+pkgbase=gdb
+# gdb-common is a package that contains files common for all cross compiled versions
+# of gdb (for arm/avr/...)
+pkgname=(gdb gdb-common)
+pkgver=7.12.1
+pkgrel=1
+pkgdesc='The GNU Debugger'
+arch=(x86_64)
+url='http://www.gnu.org/software/gdb/'
+license=(GPL3)
+makedepends=(texinfo python guile2.0 ncurses expat xz)
+source=(https://ftp.gnu.org/gnu/gdb/${pkgname}-${pkgver}.tar.xz{,.sig}
+0001-Hurd-Adjust-to-Per-inferior-Inferior-qualified-threa.patch
+0004-Hurd-C-Avoid-GNU-C-nested-functions.patch
+0005-Hurd-C-Avoid-const-char-to-char-casts.patch
+0006-Hurd-C-kern_return_t-vs.-error_t.patch
+0007-Hurd-C-Mach-Hurd-headers-and-MIG-stubs-are-not-yet-f.patch
+0008-Hurd-In-the-CLI-use-parse_thread_id-instead-of-globa.patch
+0021-Avoid-PATH_MAX-usage.patch
+0022-Hurd-Adjust-to-changes-to-push-pruning-old-threads-d.patch
+explicit-cast-void.patch
+hurd-backport-for-7.12-branch.patch
+hurd_update_rpc_prototypes.patch)
+sha1sums=('ef77c5345d6f9fdcdf7a5d8503301242b701936e'
+          'SKIP'
+          '2d4766701330644aa4f202336b31af3553d8e923'
+          '255808763f25e5c5775821fdc2c76138cb0486f4'
+          '35ba97ba1716449e947dc20dee1f140e2cbb932c'
+          '09afa91e185ed277255ae98678e3343d88531a09'
+          '78994a6d21fa99bcde5c528f1ba3cd0cb51683aa'
+          '364d6734bba0d425a391ffcdefd73436d076b37a'
+          '89669b6eafce3f2bd936d3676a95d455dbf6358b'
+          '3f87e50cca6f92c6cdf750e349728d3109394f00'
+          '61422f17917f2332ff0b2a4cf1d138213fe3d891'
+          'c66e07284f52b5e9b0f1587e762d8a7596ed2e59'
+          'c47d11ddc7aa38056ccf53840d258cda75f1a4e8')
+validpgpkeys=('F40ADB902B24264AA42E50BF92EDB04BFF325CF3') # Joel Brobecker
+
+prepare() {
+  cd gdb-$pkgver
+
+  # hack! - libiberty configure tests for header files using "$CPP $CPPFLAGS"
+  sed -i "/ac_cpp=/s/\$CPPFLAGS/\$CPPFLAGS -O2/" libiberty/configure
+
+  patch -Np1 -i "$srcdir"/0001-Hurd-Adjust-to-Per-inferior-Inferior-qualified-threa.patch
+  patch -Np1 -i "$srcdir"/0004-Hurd-C-Avoid-GNU-C-nested-functions.patch
+  patch -Np1 -i "$srcdir"/0005-Hurd-C-Avoid-const-char-to-char-casts.patch
+  patch -Np1 -i "$srcdir"/0006-Hurd-C-kern_return_t-vs.-error_t.patch
+  patch -Np1 -i "$srcdir"/0007-Hurd-C-Mach-Hurd-headers-and-MIG-stubs-are-not-yet-f.patch
+  patch -Np1 -i "$srcdir"/0008-Hurd-In-the-CLI-use-parse_thread_id-instead-of-globa.patch
+  patch -Np1 -i "$srcdir"/0021-Avoid-PATH_MAX-usage.patch
+  patch -Np1 -i "$srcdir"/0022-Hurd-Adjust-to-changes-to-push-pruning-old-threads-d.patch
+  patch -Np1 -i "$srcdir"/explicit-cast-void.patch
+  patch -Np1 -i "$srcdir"/hurd-backport-for-7.12-branch.patch
+  patch -Np1 -i "$srcdir"/hurd_update_rpc_prototypes.patch
+}
+
+build() {
+  cd gdb-$pkgver
+  
+  ./configure --prefix=/usr --disable-nls \
+    --with-system-readline \
+    --with-python=/usr/bin/python3 \
+    --with-guile=guile-2.0 \
+    --with-system-gdbinit=/etc/gdb/gdbinit
+  make
+}
+
+package_gdb-common() {
+  depends=(python guile2.0)
+
+  cd gdb-$pkgver
+  make DESTDIR=$pkgdir install
+
+  # resolve conflicts with binutils
+  rm $pkgdir/usr/include/{ansidecl,bfd,bfdlink,dis-asm,plugin-api,symcat}.h
+  rm $pkgdir/usr/share/info/bfd.info
+  rm $pkgdir/usr/lib/{libbfd,libopcodes}.a
+  rm $pkgdir/usr/lib/{libbfd,libopcodes}.la
+
+  rm -r $pkgdir/usr/{bin,include,lib,share/info,share/man}
+}
+
+package_gdb() {
+  depends=(ncurses expat xz mpfr gdb-common=$pkgver)
+  backup=(etc/gdb/gdbinit)
+
+  cd gdb-$pkgver
+  make DESTDIR=$pkgdir install
+
+  # install "custom" system gdbinit
+  install -dm755 $pkgdir/etc/gdb
+  touch $pkgdir/etc/gdb/gdbinit
+
+  # resolve conflicts with binutils
+  rm $pkgdir/usr/include/{ansidecl,bfd,bfdlink,dis-asm,plugin-api,symcat}.h
+  rm $pkgdir/usr/share/info/bfd.info
+  rm $pkgdir/usr/lib/{libbfd,libopcodes}.a
+  rm $pkgdir/usr/lib/{libbfd,libopcodes}.la
+  # resolve fonclits with hurd
+  mv $pkgdir/usr/bin/{gcore,gcore-gdb}
+
+  # comes from gdb-common
+  rm -r $pkgdir/usr/share/gdb/
+}

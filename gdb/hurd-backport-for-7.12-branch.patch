@@ -1,0 +1,54 @@
+Description: hurd support
+ gdb (7.12-2+hurd1) UNRELEASED; urgency=medium
+ .
+   * Patches for hurd
+Author: Hector Oron <zumbi@exodar.debian.net>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2016-12-15
+
+--- gdb-7.12.orig/gdb/inferior.c
++++ gdb-7.12/gdb/inferior.c
+@@ -559,7 +559,7 @@ print_selected_inferior (struct ui_out *
+   const char *filename = inf->pspace->pspace_exec_filename;
+   if (filename == NULL)
+     filename = _("<noexec>");
+-  ui_out_message (uiout, _("[Switching to inferior %d [%s] (%s)]\n"),
++  ui_out_message (uiout, 0, _("[Switching to inferior %d [%s] (%s)]\n"),
+ 		  inf->num, inferior_pid_to_str (inf->pid), filename);
+ }
+ 
+--- gdb-7.12.orig/gdb/remote.c
++++ gdb-7.12/gdb/remote.c
+@@ -6511,7 +6511,6 @@ Packet: '%s'\n"),
+ 	  else if (strprefix (p, p1, "exec"))
+ 	    {
+ 	      ULONGEST ignored;
+-	      char pathname[PATH_MAX];
+ 	      int pathlen;
+ 
+ 	      /* Determine the length of the execd pathname.  */
+@@ -6520,11 +6519,12 @@ Packet: '%s'\n"),
+ 
+ 	      /* Save the pathname for event reporting and for
+ 		 the next run command.  */
++	      char *pathname = (char *) xmalloc (pathlen + 1);
+ 	      hex2bin (p1, (gdb_byte *) pathname, pathlen);
+ 	      pathname[pathlen] = '\0';
+ 
+ 	      /* This is freed during event handling.  */
+-	      event->ws.value.execd_pathname = xstrdup (pathname);
++	      event->ws.value.execd_pathname = pathname;
+ 	      event->ws.kind = TARGET_WAITKIND_EXECD;
+ 
+ 	      /* Skip the registers included in this packet, since

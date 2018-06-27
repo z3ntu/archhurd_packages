@@ -1,0 +1,54 @@
+From c752a4cccb99ba73f51eff74b394dcdcd26d4c59 Mon Sep 17 00:00:00 2001
+From: Thomas Schwinge <thomas@codesourcery.com>
+Date: Wed, 25 May 2016 18:54:40 +0200
+Subject: [PATCH 22/65] Hurd: Adjust to changes to "push pruning old threads
+ down to the target"
+
+For "info threads", we currently run into:
+
+    $ gdb/gdb -q -nw -nx --batch -ex start -ex info\ threads bfd/doc/chew
+    Temporary breakpoint 1 at 0x80486e0: file ../../../W._C._Handy/bfd/doc/chew.c, line 1535.
+    [New Thread 10656.5]
+
+    Thread 4 hit Temporary breakpoint 1, main (ac=1, av=0x102cd84) at ../../../W._C._Handy/bfd/doc/chew.c:1535
+    1535    {
+      Id   Target Id         Frame
+      1    bogus thread id 1 Can't fetch registers from thread bogus thread id 1: No such thread
+
+Before commit e8032dde10b743253125d7defb5f5503b21c1d26,
+gdb/thread.c:update_thread_list used to call prune_threads, after that change
+it doesn't anymore, and we don't implement the to_update_thread_list target
+method where the prune_threads call got moved.  For now, apply a fix, related
+to commit c82f56d9d760a9b4034eeaac44f2f0fa5779ff69 "Hurd: Adjust to
+startup-with-shell changes", which restores the previous behavior:
+
+      Id   Target Id         Frame
+    * 4    Thread 10688.4    main (ac=1, av=0x102cd84) at ../../../W._C._Handy/bfd/doc/chew.c:1535
+      5    Thread 10688.5    0x0106096c in ?? () from /lib/i386-gnu/libc.so.0.3
+
+Not perfect, but at least better.
+
+	gdb/
+	* gnu-nat.c (gnu_create_inferior): After startup_inferior, call
+	prune_threads.
+---
+ gdb/ChangeLog | 3 +++
+ gdb/gnu-nat.c | 2 ++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/gdb/gnu-nat.c b/gdb/gnu-nat.c
+index 124574e8ed..85a53b8b1b 100644
+--- a/gdb/gnu-nat.c
++++ b/gdb/gnu-nat.c
+@@ -2163,6 +2163,8 @@ gnu_create_inferior (struct target_ops *ops,
+ 
+   startup_inferior (START_INFERIOR_TRAPS_EXPECTED);
+   inf->pending_execs = 0;
++  /* Get rid of the old shell threads.  */
++  prune_threads ();
+ 
+   inf_validate_procinfo (inf);
+   inf_update_signal_thread (inf);
+-- 
+2.11.0
+
