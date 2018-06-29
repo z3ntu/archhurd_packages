@@ -1,9 +1,9 @@
 # Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
 
 pkgname=hurd
-pkgver=0.9.r143.g679b58fa
+pkgver=0.9.r145.g06429d67
 # branch 'master' in hurd/hurd.git
-_commit=679b58fae96597d6a41f314dfcb93aae2da7d554
+_commit=06429d67b7e9be332d1012ed4c2bba694e5ddabb
 pkgrel=1
 pkgdesc="The GNU Hurd"
 arch=(i686)
@@ -40,6 +40,9 @@ build() {
   
   ../$pkgname/configure \
      --prefix=/usr \
+     --sbindir=/usr/bin \
+     --libexecdir=/usr/lib \
+     --sysconfdir=/etc \
      --disable-profile \
      --enable-static-progs='iso9660fs,ext2fs,ufs'
   make
@@ -48,31 +51,24 @@ build() {
 package() {
   cd "$srcdir/build"
 
-  make prefix="$pkgdir/" install
+  make DESTDIR="$pkgdir/" install
 
   install -m 644 $srcdir/ttys $pkgdir/etc/ttys
 
   # system startup scripts are in the initscripts package
-  rm $pkgdir/libexec/runsystem $pkgdir/libexec/rc
+  rm $pkgdir/usr/lib/runsystem $pkgdir/usr/lib/rc
 
   # for rc.shutdown
-  mv $pkgdir/sbin/halt $pkgdir/sbin/internal_halt
-  mv $pkgdir/sbin/reboot $pkgdir/sbin/internal_reboot
-
-  # TODO: Fix install prefix (maybe DESTDIR??)
-  mkdir -p "$pkgdir"/usr/bin
-  mv "$pkgdir"/include "$pkgdir"/usr/include
-  mv "$pkgdir"/lib "$pkgdir"/usr/lib
-  mv "$pkgdir"/sbin/* "$pkgdir"/usr/bin
-  mv "$pkgdir"/bin/* "$pkgdir"/usr/bin
-  rmdir "$pkgdir"/sbin "$pkgdir"/bin
-  mv "$pkgdir"/share "$pkgdir"/usr/share
-  mv "$pkgdir"/libexec/* "$pkgdir"/usr/lib
-  rmdir "$pkgdir"/libexec
+  mv $pkgdir/usr/bin/halt $pkgdir/usr/bin/halt-hurd
+  mv $pkgdir/usr/bin/reboot $pkgdir/usr/bin/reboot-hurd
 
   # uptime gets provided by procps-ng
   mv "$pkgdir"/usr/bin/uptime{,-hurd}
   # fsck gets provided by util-linux
   mv "$pkgdir"/usr/bin/fsck{,-hurd}
+
+  # fix install prefix of /dev & /hurd
+  mv "$pkgdir"/usr/dev "$pkgdir"/dev
+  mv "$pkgdir"/usr/hurd "$pkgdir"/hurd
 }
 
