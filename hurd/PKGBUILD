@@ -70,5 +70,8 @@ package() {
   # fix install prefix of /dev & /hurd
   mv "$pkgdir"/usr/dev "$pkgdir"/dev
   mv "$pkgdir"/usr/hurd "$pkgdir"/hurd
+
+  # remove files included in hurd-headers
+  rm -rf "$pkgdir"/usr/include
 }
 
