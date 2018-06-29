@@ -17,10 +17,11 @@ options=(!strip staticlibs !emptydirs)
 source=(git+git://sourceware.org/git/glibc.git#commit=$_commit
         locale.gen.txt
         locale-gen
-        t_socket_flags.patch
-        t_socketpair_flags.patch
-        t_pipe2.patch  # fix popen (=gawk not working)
+        t_socket_flags.patch  # dependency for t_socketpair_flags
+        t_socketpair_flags.patch  # dependency for t_pipe2
+        t_pipe2.patch  # fix popen = gawk not working
         glibc_compatibility_symbols.patch  # symbols that were declared in earlier glibc versions, should be removed once all packages are recompiled
+        tg-mach-hurd-link.diff  # needed for linking a bunch of stuff
         local-enable-ldconfig.diff  # patch based on local-enable-ldconfig.diff from Debian
         local-clock_gettime_MONOTONIC.diff)  # from Debian
 sha256sums=('SKIP'
@@ -30,6 +31,7 @@ sha256sums=('SKIP'
             '74ec66bca0c717808fcc6e9da278e79ec11b806f27bb0cff6d8249b0f69ce16b'
             'f7bde9405d2102945730fb9cb17f6e02201a8d52b05faf8d24ca23dee5f8e5fd'
             '6be8c1f6b24ac7c8714baf972caf4c261fb848ca5feaf40da87eed33a9be9e86'
+            '58e3929cfb0dd3573e9bef0877a9d5480cedf451193bcfcb12adefff8193016b'
             '6dce5ae782515a57a3f6fe5f4fde4554049d4c7d206f83725a3debcd8db22a9f'
             '17f015eb50a0b70d865b6b5bd0f7ceb5762cc4e8d7392b2100c8ae9032980454')
 
@@ -47,6 +49,7 @@ prepare() {
   patch -Np1 -i "$srcdir"/t_socketpair_flags.patch
   patch -Np1 -i "$srcdir"/t_pipe2.patch
   patch -Np1 -i "$srcdir"/glibc_compatibility_symbols.patch
+  patch -Np1 -i "$srcdir"/tg-mach-hurd-link.diff
   patch -Np1 -i "$srcdir"/local-enable-ldconfig.diff
   patch -Np1 -i "$srcdir"/local-clock_gettime_MONOTONIC.diff
 }  
