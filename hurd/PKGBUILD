@@ -19,6 +19,7 @@ source=(git+https://git.savannah.gnu.org/git/hurd/hurd.git#commit=$_commit
         ttys)
 md5sums=('SKIP'
          '9d20e63e81835c76cc708ce6184f3530')
+options=('debug' '!strip')
 
 pkgver() {
   cd "$pkgname"
