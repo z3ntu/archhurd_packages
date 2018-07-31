@@ -5,9 +5,9 @@
 # NOTE: valgrind requires rebuilt with each major glibc version
 
 pkgname=glibc
-pkgver=2.27.9000.r33609.a650b05ebe
-# branch 'tschwinge/Roger_Whittaker' in hurd/glibc.git
-_commit=a650b05ebee8fb8d0df03396002e680b3a79918d
+pkgver=2.27.9000.r33832.98864ed0e0
+# branch 'master' in glibc.git
+_commit=98864ed0e055583707e37cdb7d41a9cdeac4473b
 pkgrel=1
 arch=(i686)
 url="http://www.gnu.org/software/libc"
@@ -17,9 +17,6 @@ options=(!strip staticlibs !emptydirs)
 source=(git+git://sourceware.org/git/glibc.git#commit=$_commit
         locale.gen.txt
         locale-gen
-        t_socket_flags.patch  # dependency for t_socketpair_flags
-        t_socketpair_flags.patch  # dependency for t_pipe2
-        t_pipe2.patch  # fix popen = gawk not working
         glibc_compatibility_symbols.patch  # symbols that were declared in earlier glibc versions, should be removed once all packages are recompiled
         tg-mach-hurd-link.diff  # needed for linking a bunch of stuff
         local-enable-ldconfig.diff  # patch based on local-enable-ldconfig.diff from Debian
@@ -27,9 +24,6 @@ source=(git+git://sourceware.org/git/glibc.git#commit=$_commit
 sha256sums=('SKIP'
             'd42648cea552ba5353a32e264686e992263289d5cc86207314dffc54ab514981'
             '83f108f915863c7ed0338e2d3e8f2e071a531a090ef8f8b2eb3a956a3c4f04d7'
-            '9f9eab242784785ebde7f783e365f1829e9db2fa0bda31f0965908cde72802f6'
-            '74ec66bca0c717808fcc6e9da278e79ec11b806f27bb0cff6d8249b0f69ce16b'
-            'f7bde9405d2102945730fb9cb17f6e02201a8d52b05faf8d24ca23dee5f8e5fd'
             '6be8c1f6b24ac7c8714baf972caf4c261fb848ca5feaf40da87eed33a9be9e86'
             '58e3929cfb0dd3573e9bef0877a9d5480cedf451193bcfcb12adefff8193016b'
             '6dce5ae782515a57a3f6fe5f4fde4554049d4c7d206f83725a3debcd8db22a9f'
@@ -45,9 +39,6 @@ prepare() {
   mkdir -p glibc-build
 
   cd glibc
-  patch -Np1 -i "$srcdir"/t_socket_flags.patch
-  patch -Np1 -i "$srcdir"/t_socketpair_flags.patch
-  patch -Np1 -i "$srcdir"/t_pipe2.patch
   patch -Np1 -i "$srcdir"/glibc_compatibility_symbols.patch
   patch -Np1 -i "$srcdir"/tg-mach-hurd-link.diff
   patch -Np1 -i "$srcdir"/local-enable-ldconfig.diff
