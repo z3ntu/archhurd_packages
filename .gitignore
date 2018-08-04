@@ -9,3 +9,5 @@
 !/*/*.install
 !/*/*.hook
 !/*/*.desktop
+
+!.unmodified

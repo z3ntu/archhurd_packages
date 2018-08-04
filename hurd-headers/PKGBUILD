@@ -2,9 +2,9 @@
 
 _pkgname=hurd
 pkgname=hurd-headers
-pkgver=0.9.r143.g679b58fa
+pkgver=0.9.r145.g06429d67
 # branch 'master' in hurd/hurd.git
-_commit=679b58fae96597d6a41f314dfcb93aae2da7d554
+_commit=06429d67b7e9be332d1012ed4c2bba694e5ddabb
 pkgrel=1
 pkgdesc="The GNU Hurd - headers"
 arch=(i686)
