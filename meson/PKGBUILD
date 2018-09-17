@@ -3,7 +3,7 @@
 # Contributor: Anatol Pomozov <anatol dot pomozov at gmail>
 
 pkgname=meson
-pkgver=0.43.0
+pkgver=0.47.2
 pkgrel=1
 pkgdesc='High productivity build system'
 url='http://mesonbuild.com/'
@@ -11,23 +11,24 @@ arch=('any')
 license=('Apache')
 depends=('python' 'ninja')
 makedepends=('python-setuptools')
-checkdepends=('gcc-objc' 'vala' 'rust' 'gcc-fortran' 'mono' 'boost' 'qt4' 'qt5-base' 'git' 'gnustep-base'
-              'cython' 'gtkmm3' 'gtest' 'gmock' 'protobuf' 'wxgtk' 'python-gobject' 'gobject-introspection'
-              'itstool' 'gtk3' 'java-environment=8' 'gtk-doc' 'llvm' 'clang' 'sdl2'
-              'doxygen' 'vulkan-validation-layers' 'openmpi' 'openssh' 'mercurial' 'gtk-sharp-2')
-checkdepends_x86_64=('ldc' 'valgrind')
+checkdepends=('gcc-objc' 'vala' 'rust' 'gcc-fortran' 'mono' 'boost' 'qt4' 'qt5-base' 'git' 'cython'
+              'gtkmm3' 'gtest' 'gmock' 'protobuf' 'wxgtk' 'python-gobject' 'gobject-introspection'
+              'itstool' 'gtk3' 'java-environment=8' 'gtk-doc' 'llvm' 'clang' 'sdl2' 'graphviz'
+              'doxygen' 'vulkan-validation-layers' 'openssh' 'mercurial' 'gtk-sharp-2' 'qt5-tools'
+              'libwmf' 'dmd' 'valgrind')
 source=(https://github.com/mesonbuild/meson/releases/download/${pkgver}/meson-${pkgver}.tar.gz{,.asc}
-        fix-tests.diff
-        arch-meson)
-sha512sums=('e149758fa6ad4b2d3643bcda176577633f2e50e58f38074c1a17f1712d554bac0fbabf26fe7eef15954dc51630b1f923b15cfe9040a025cf61b5666098197d16'
+        arch-meson test.diff)
+sha512sums=('a1ac5691a5319ccf196d9443aea61e6c3ee9f09a9f638a3a7b5e5381b4c14372253c845be74fa2b59f42b9697671f12bce92c46bcb5cb629aeebd68e044e0021'
             'SKIP'
-            '7ea1f02adf79e4fde5d002956852d9b976b36386be8d78a3845292e8195a36d462db20a9c708e332e0d3b261a7abf9d05f5d034aab96ede58229639f3620ec91'
-            '82557891b9424b1597f1200bfacfae2f357e94bf81d53fc3fe9b2b641098566513dce6eeaa8882e9892c7cdec796650e5298ed25af61f35f9d02d9b4b9ca39c8')
+            '4cdacd6a7d2bdaacde176fd7f90f8a06ae403db7e63498518c637b13bdc344dca595fb8b9f41f978f450cd43ffef8a4013c0e74f669d13ba6881d38068ea1c0d'
+            '0e537c4fc04535decf901713f05d895dd8b93f2136e463b4a5adc5f2bf3a3e4c4ee07b5936fd7d01309af75a50fb1dc8d842b953c039ffe096efd54fd86aa7d0')
 validpgpkeys=('95181F4EED14FDF4E41B518D3BF4693BFEEB9428') # Jussi Pakkanen <jpakkane@gmail.com>
 
 prepare() {
   cd ${pkgname}-${pkgver}
-  patch -Np1 -i ../fix-tests.diff
+
+  # https://github.com/mesonbuild/meson/issues/4083
+  patch -Np1 -i ../test.diff
 }
 
 build() {
@@ -35,21 +36,25 @@ build() {
   python setup.py build
 }
 
-check() {
+check() (
   cd ${pkgname}-${pkgver}
-  unset CLASSPATH  # GNUstep breaks java tests
-  LDFLAGS="${LDFLAGS/,--as-needed/}" # --as-needed breaks openmpi linking
-  # export MESON_PRINT_TEST_OUTPUT=1 # set this for debug output
-  # graphviz: Installing breaks doxygen tests
-  LC_CTYPE=en_US.UTF-8 DC=ldc ./run_tests.py
-}
+
+  # set for debug output
+  #export MESON_PRINT_TEST_OUTPUT=1
+
+  export LC_CTYPE=en_US.UTF-8
+  ./run_tests.py
+)
 
 package() {
   cd ${pkgname}-${pkgver}
   python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
-  install -Dm 644 syntax-highlighting/vim/ftdetect/meson.vim -t "${pkgdir}/usr/share/vim/vimfiles/ftdetect"
-  install -Dm 644 syntax-highlighting/vim/indent/meson.vim -t "${pkgdir}/usr/share/vim/vimfiles/indent"
-  install -Dm 644 syntax-highlighting/vim/syntax/meson.vim -t "${pkgdir}/usr/share/vim/vimfiles/syntax"
+
+  install -d "${pkgdir}/usr/share/vim/vimfiles"
+  cp -rt "${pkgdir}/usr/share/vim/vimfiles" data/syntax-highlighting/vim/*
+
+  install -Dt "${pkgdir}/usr/share/emacs/site-lisp" -m644 data/syntax-highlighting/emacs/*
+  install -Dt "${pkgdir}/usr/share/zsh/site-functions" -m644 data/shell-completions/zsh/*
 
   # Arch packaging helper
   install -D ../arch-meson -t "${pkgdir}/usr/bin"
