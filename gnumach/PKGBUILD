@@ -1,9 +1,9 @@
 # Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
 
 pkgname=gnumach
-pkgver=1.8.r63.gb036b05d
+pkgver=1.8.r66.gb25b78f5
 # branch 'master' in hurd/gnumach.git
-_commit=b036b05d9ad0ba367b6c99a046364ec912416f85
+_commit=b25b78f5c087bd187889dc4bb6bfeff0826a651d
 pkgrel=1
 pkgdesc="GNU Mach"
 arch=(i686)

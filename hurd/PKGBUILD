@@ -1,10 +1,10 @@
 # Maintainer: Luca Weiss <luca (at) z3ntu (dot) xyz>
 
 pkgname=hurd
-pkgver=0.9.r145.g06429d67
+pkgver=0.9.r150.gc67c7e75
 # branch 'master' in hurd/hurd.git
-_commit=06429d67b7e9be332d1012ed4c2bba694e5ddabb
-pkgrel=2
+_commit=c67c7e7500f1494adedb85c9f29c03a62e38778b
+pkgrel=1
 pkgdesc="The GNU Hurd"
 arch=(i686)
 url="http://www.gnu.org/software/hurd/hurd.html"

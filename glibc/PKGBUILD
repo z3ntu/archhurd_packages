@@ -5,9 +5,9 @@
 # NOTE: valgrind requires rebuilt with each major glibc version
 
 pkgname=glibc
-pkgver=2.28.9000.r33855.cfb0ff932e
+pkgver=2.28.9000.r33990.d90c9b1a12
 # branch 'master' in glibc.git
-_commit=cfb0ff932e4b7be930cebe25fce3b6b427a40de8
+_commit=d90c9b1a121295a5e31810b899ab637f68898857
 pkgrel=1
 arch=(i686)
 url="http://www.gnu.org/software/libc"
