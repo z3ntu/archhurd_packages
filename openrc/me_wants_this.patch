@@ -1,0 +1,78 @@
+diff --git a/man/Makefile b/man/Makefile
+index 006c8d16..b6409c7b 100644
+--- a/man/Makefile
++++ b/man/Makefile
+@@ -8,9 +8,9 @@ MAN3=		einfo.3 \
+ MAN8=		rc-service.8 rc-status.8 rc-update.8 openrc.8 openrc-run.8 \
+ 		start-stop-daemon.8 supervise-daemon.8
+ 
+-ifeq (${OS},Linux)
++#ifeq (${OS},Linux)
+ MAN8 += rc-sstat.8 openrc-init.8 openrc-shutdown.8
+-endif
++#endif
+ 
+ # Handy macro to create symlinks
+ # This does rely on correctly formatting our manpages!
+diff --git a/scripts/Makefile b/scripts/Makefile
+index d2215b34..eb19dd92 100644
+--- a/scripts/Makefile
++++ b/scripts/Makefile
+@@ -5,17 +5,17 @@ DIR=	${LIBEXECDIR}/bin
+ BIN=	on_ac_power
+ INSTALLAFTER = _installafter
+ 
+-ifeq (${OS},Linux)
++#ifeq (${OS},Linux)
+ SRCS+= rc-sstat.in
+ BIN+=	rc-sstat
+ ifeq (${MKSYSVINIT},yes)
+ SRCS+= halt.in poweroff.in reboot.in shutdown.in
+ BIN+=	halt poweroff reboot shutdown
+ 	endif
+-endif
++#endif
+ 
+ _installafter:
+-ifeq (${OS},Linux)
++#ifeq (${OS},Linux)
+ 	${INSTALL} -d ${DESTDIR}${SBINDIR}
+ 	ln -sf ${DIR}/rc-sstat ${DESTDIR}/${SBINDIR}/rc-sstat
+ ifeq (${MKSYSVINIT},yes)
+@@ -25,6 +25,6 @@ ifeq (${MKSYSVINIT},yes)
+ 	ln -sf	${DIR}/shutdown ${DESTDIR}/${SBINDIR}/shutdown
+ 	ln -sf	openrc-init ${DESTDIR}/${SBINDIR}/init
+ endif
+-endif
++#endif
+ 
+ include ${MK}/scripts.mk
+diff --git a/src/rc/Makefile b/src/rc/Makefile
+index b09c5058..4d09dd6b 100644
+--- a/src/rc/Makefile
++++ b/src/rc/Makefile
+@@ -13,9 +13,9 @@ ifeq (${MKSELINUX},yes)
+ SRCS+=		rc-selinux.c
+ endif
+ 
+-ifeq (${OS},Linux)
++#ifeq (${OS},Linux)
+ SRCS+=		kill_all.c openrc-init.c openrc-shutdown.c rc-wtmp.c
+-endif
++#endif
+ 
+ CLEANFILES=	version.h rc-selinux.o
+ 
+@@ -44,10 +44,10 @@ RC_SBINPROGS=	mark_service_starting mark_service_started \
+ 		mark_service_crashed \
+ 		rc-abort swclock
+ 
+-ifeq (${OS},Linux)
++#ifeq (${OS},Linux)
+ RC_BINPROGS+= kill_all
+ SBINPROGS+= openrc-init openrc-shutdown
+-endif
++#endif
+ 
+ ALL_PROGS=	${BINPROGS} ${SBINPROGS} ${RC_BINPROGS} ${RC_SBINPROGS}
+ CLEANFILES+=	${ALL_PROGS}
