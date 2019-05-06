@@ -55,7 +55,7 @@ build() {
     --enable-ping --enable-ping6 \
     --disable-logger --disable-syslogd \
     --disable-inetd --disable-whois \
-    --disable-uucpd --disable-ifconfig --disable-traceroute
+    --disable-uucpd --enable-ifconfig --disable-traceroute
   make
 }
 
