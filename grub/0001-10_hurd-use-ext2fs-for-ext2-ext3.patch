@@ -1,0 +1,26 @@
+From 889332d669eabcfc59f097a06bace9ae592fd3f1 Mon Sep 17 00:00:00 2001
+From: Luca Weiss <luca@z3ntu.xyz>
+Date: Wed, 8 May 2019 23:33:20 +0200
+Subject: [PATCH] 10_hurd: use ext2fs for ext2/ext3
+
+If grub-prober doesn't find the file system, stat is being used and stat
+returns ext2/ext3, so cover this as well.
+---
+ util/grub.d/10_hurd.in | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/util/grub.d/10_hurd.in b/util/grub.d/10_hurd.in
+index 59a9a48a2..9c20ad328 100644
+--- a/util/grub.d/10_hurd.in
++++ b/util/grub.d/10_hurd.in
+@@ -54,6 +54,7 @@ done
+ 
+ # FIXME: This works for ext2.  For other filesystems we might need special-casing
+ case "${GRUB_FS}" in
++  ext2/ext3)	hurd_fs="ext2fs" ;;
+   *fs)	hurd_fs="${GRUB_FS}" ;;
+   *)	hurd_fs="${GRUB_FS}fs" ;;
+ esac
+-- 
+2.21.0
+
